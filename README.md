@@ -273,205 +273,6 @@ df.describe()
 
 
 ```python
-df5 = df4.groupby(['year'])['eviction_filings','evictions', 'renter_occupied_households'].agg(['sum']).reset_index()
-df5
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr>
-      <th></th>
-      <th>year</th>
-      <th>eviction_filings</th>
-      <th>evictions</th>
-      <th>renter_occupied_households</th>
-    </tr>
-    <tr>
-      <th></th>
-      <th></th>
-      <th>sum</th>
-      <th>sum</th>
-      <th>sum</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2000</td>
-      <td>2839147.0</td>
-      <td>1877076.0</td>
-      <td>73470453.0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2001</td>
-      <td>3669557.0</td>
-      <td>2242078.0</td>
-      <td>85298385.0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2002</td>
-      <td>4020720.0</td>
-      <td>2181770.0</td>
-      <td>92081767.0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>2003</td>
-      <td>4136836.0</td>
-      <td>2207673.0</td>
-      <td>93865801.0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>2004</td>
-      <td>4137413.0</td>
-      <td>2238639.0</td>
-      <td>94782833.0</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>2005</td>
-      <td>4221733.0</td>
-      <td>2227297.0</td>
-      <td>96684164.0</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>2006</td>
-      <td>4531514.0</td>
-      <td>2432722.0</td>
-      <td>96937416.0</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>2007</td>
-      <td>3881797.0</td>
-      <td>2456518.0</td>
-      <td>94462459.0</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>2008</td>
-      <td>4288663.0</td>
-      <td>2689517.0</td>
-      <td>95449710.0</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>2009</td>
-      <td>4165820.0</td>
-      <td>2513483.0</td>
-      <td>96817469.0</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>2010</td>
-      <td>4448872.0</td>
-      <td>2556486.0</td>
-      <td>97786802.0</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>2011</td>
-      <td>3797237.0</td>
-      <td>1864447.0</td>
-      <td>85378228.0</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>2012</td>
-      <td>3709882.0</td>
-      <td>1789178.0</td>
-      <td>86910972.0</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>2013</td>
-      <td>3565768.0</td>
-      <td>1678092.0</td>
-      <td>88323223.0</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>2014</td>
-      <td>3559222.0</td>
-      <td>1621855.0</td>
-      <td>92244645.0</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>2015</td>
-      <td>3430042.0</td>
-      <td>1540418.0</td>
-      <td>92586052.0</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>2016</td>
-      <td>3432172.0</td>
-      <td>1533765.0</td>
-      <td>95206079.0</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-# plt.subplot(1,2,1)
-# plt.plot(df5['year'], df5['eviction_filings']['sum']/df5['renter_occupied_households']['sum']*100, '.')
-# plt.ylabel('Eviction Filling Rate',fontsize=18)
-# plt.xlabel
-# plt.subplot(1,2,2)
-# plt.plot(df5['year'], df5['evictions']['sum']/df5['renter_occupied_households']['sum']*100, '.')
-# plt.ylabel('Eviction Rate',fontsize=18)
-
-f, (ax1, ax2) = plt.subplots(1,2, sharex = True, sharey = True, figsize=(10, 5))
-
-ax1.plot(df5['year'], df5['eviction_filings']['sum']/df5['renter_occupied_households']['sum']*100, '.')
-ax1.set_xlabel('Year', fontsize=18)
-ax1.set_ylabel('Eviction Filling Rate',fontsize=18)
-
-
-ax2.plot(df5['year'], df5['evictions']['sum']/df5['renter_occupied_households']['sum']*100, '.')
-ax2.set_xlabel('Year', fontsize=18)
-ax2.set_ylabel('Eviction Rate',fontsize=18)
-```
-
-
-
-
-    Text(0,0.5,'Eviction Rate')
-
-
-
-
-![png](output_3_1.png)
-
-
-
-```python
 #visualization
 df.hist(column= 'poverty_rate', bins = 50)
 plt.show()
@@ -480,22 +281,22 @@ df.hist(column = 'median_household_income', bins = 50)
 ```
 
 
-![png](output_4_0.png)
+![png](output_2_0.png)
 
 
 
 
 
-    array([[<matplotlib.axes._subplots.AxesSubplot object at 0x0000022611AD0BA8>]], dtype=object)
+    array([[<matplotlib.axes._subplots.AxesSubplot object at 0x0000022600C836D8>]], dtype=object)
 
 
 
 
-![png](output_4_2.png)
+![png](output_2_2.png)
 
 
 
-![png](output_4_3.png)
+![png](output_2_3.png)
 
 
 
@@ -509,7 +310,7 @@ make_plot(df_sampled)
 ```
 
 
-![png](output_6_0.png)
+![png](output_4_0.png)
 
 
 
@@ -536,7 +337,7 @@ make_plot(df, ['population'], 'eviction_rate')
 ```
 
 
-![png](output_9_0.png)
+![png](output_7_0.png)
 
 
 
@@ -940,7 +741,7 @@ plt.plot(preds, y_test, '.')
 
 
 
-![png](output_19_1.png)
+![png](output_17_1.png)
 
 
 
@@ -949,7 +750,7 @@ make_plot(df.sample(frac=1), features=['median_gross_rent'])
 ```
 
 
-![png](output_20_0.png)
+![png](output_18_0.png)
 
 
 
@@ -1708,7 +1509,7 @@ plt.xlim([0,150000])
 
 
 
-![png](output_33_1.png)
+![png](output_31_1.png)
 
 
 
@@ -2381,31 +2182,32 @@ df3.iloc[0]
 
 
 ```python
-#plt.style.use('seaborn-white')
-f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5,1, sharex = True, sharey = True, figsize=(10, 20))
-
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5,1, sharex=True)
 ax1.plot(df3['pct_white'],  df3['eviction_rate'],'.')
-ax1.set_xlabel('% population of White',fontsize=18)
-
+ax1.set_title('pct_white')
 
 ax2.plot(df3['pct_af_am'],  df3['eviction_rate'],'.')
-ax2.set_xlabel('% population of African American',fontsize=18)
+ax2.set_title('pct_af_am')
 
 ax3.plot(df3['pct_hispanic'],  df3['eviction_rate'],'.')
-ax3.set_xlabel('% population of Hispanic or Latino origin',fontsize=18)
+ax3.set_title('pct_hispanic')
 
 ax4.plot(df3['pct_am_ind'],  df3['eviction_rate'],'.')
-ax4.set_xlabel('% population of American Indian and Alaska Native',fontsize=18)
+ax4.set_title('pct_am_ind')
 
 ax5.plot(df3['pct_asian'],  df3['eviction_rate'],'.')
-ax5.set_xlabel('% population of Asian',fontsize=18)
-
-for ax in (ax1, ax2, ax3, ax4, ax5):
-    ax.set_ylabel('Eviction Rate',fontsize=18)
+ax5.set_title('pct_asian')
 ```
 
 
-![png](output_43_0.png)
+
+
+    Text(0.5,1,'pct_asian')
+
+
+
+
+![png](output_41_1.png)
 
 
 
@@ -2421,38 +2223,37 @@ plt.plot(df3['pct_renter_occupied'], df3['eviction_rate'],'.')
 
 
 
-![png](output_44_1.png)
+![png](output_42_1.png)
 
 
 
 ```python
-f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5, sharey=True, figsize = (15,8))
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5, sharey=True)
 ax1.plot(df3['poverty_rate'],  df3['eviction_rate'],'.')
-ax1.set_xlabel('poverty_rate', fontsize=15)
-ax1.set_ylabel('Eviction Rate',fontsize=15)
+ax1.set_title('poverty_rate')
 
 ax2.plot(df3['median_gross_rent'],  df3['eviction_rate'],'.')
-ax2.set_xlabel('median_gross_rent', fontsize=15)
+ax2.set_title('median_gross_rent')
 
 ax3.plot(df3['median_household_income'],  df3['eviction_rate'],'.')
-ax3.set_xlabel('median_household_income', fontsize=15)
+ax3.set_title('median_household_income')
 
 ax4.plot(df3['median_property_value'],  df3['eviction_rate'],'.')
-ax4.set_xlabel('median_property_value', fontsize=15)
+ax4.set_title('median_property_value')
 
 ax5.plot(df3['rent_burden'],  df3['eviction_rate'],'.')
-ax5.set_xlabel('rent_burden', fontsize=15)
+ax5.set_title('rent_burden')
 ```
 
 
 
 
-    Text(0.5,0,'rent_burden')
+    Text(0.5,1,'rent_burden')
 
 
 
 
-![png](output_45_1.png)
+![png](output_43_1.png)
 
 
 
@@ -2468,7 +2269,7 @@ plt.plot(df3['students_total_enrollments']/df3['population'], df3['eviction_rate
 
 
 
-![png](output_46_1.png)
+![png](output_44_1.png)
 
 
 
@@ -2484,7 +2285,7 @@ plt.plot(df3['Unemployment_rate_2016'], df3['eviction_rate'],'.')
 
 
 
-![png](output_47_1.png)
+![png](output_45_1.png)
 
 
 
@@ -2500,7 +2301,7 @@ plt.plot(df3['Med_HH_Income_Percent_of_State_Total_2016'], df3['eviction_rate'],
 
 
 
-![png](output_48_1.png)
+![png](output_46_1.png)
 
 
 
@@ -2516,7 +2317,7 @@ plt.plot(df3['median_property_value'], df3['eviction_rate'],'.')
 
 
 
-![png](output_49_1.png)
+![png](output_47_1.png)
 
 
 
@@ -2532,7 +2333,7 @@ plt.plot(df3['Unemployment_rate_2016'], df3['eviction_rate'],'.')
 
 
 
-![png](output_50_1.png)
+![png](output_48_1.png)
 
 
 
@@ -2559,7 +2360,7 @@ ax4.set_title(' bachelors degree or higher 2012_2016')
 
 
 
-![png](output_51_1.png)
+![png](output_49_1.png)
 
 
 
@@ -2575,7 +2376,7 @@ plt.plot(df3['County'], df3['eviction_rate'], '.')
 
 
 
-![png](output_52_1.png)
+![png](output_50_1.png)
 
 
 
@@ -2592,7 +2393,7 @@ plt.xlim([0,150000])
 
 
 
-![png](output_53_1.png)
+![png](output_51_1.png)
 
 
 
@@ -2608,7 +2409,7 @@ plt.plot(df3['year'], df3['eviction_rate'], '.')
 
 
 
-![png](output_54_1.png)
+![png](output_52_1.png)
 
 
 
