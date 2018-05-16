@@ -10,353 +10,38 @@ import xgboost as xgb
 import seaborn as sns
 from sklearn import linear_model
 from sklearn.linear_model import SGDRegressor
+import matplotlib.ticker
+matplotlib.rcParams.update({'font.size': 16})
 %matplotlib inline
 ```
 
 
 ```python
-#df = pd.read_csv("block-groups.csv")
-df = pd.read_csv("counties_US.csv")
-df.dropna(axis=0, how='any', inplace=True)
-#print(df.iloc[0])
-columns = df.columns
-renames = {}
-for col in columns:
-    renames[col] = col.replace('-', '_')
-df = df.rename(columns=renames)
-df.describe()
+
 ```
 
 
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>GEOID</th>
-      <th>year</th>
-      <th>population</th>
-      <th>poverty_rate</th>
-      <th>pct_renter_occupied</th>
-      <th>median_gross_rent</th>
-      <th>median_household_income</th>
-      <th>median_property_value</th>
-      <th>rent_burden</th>
-      <th>pct_white</th>
-      <th>...</th>
-      <th>pct_nh_pi</th>
-      <th>pct_multiple</th>
-      <th>pct_other</th>
-      <th>renter_occupied_households</th>
-      <th>eviction_filings</th>
-      <th>evictions</th>
-      <th>eviction_rate</th>
-      <th>eviction_filing_rate</th>
-      <th>imputed</th>
-      <th>subbed</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>count</th>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>4.129900e+04</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>4.129900e+04</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>...</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>4.129900e+04</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-      <td>41299.000000</td>
-    </tr>
-    <tr>
-      <th>mean</th>
-      <td>30928.597956</td>
-      <td>2008.187753</td>
-      <td>9.717697e+04</td>
-      <td>12.410998</td>
-      <td>26.820699</td>
-      <td>592.652970</td>
-      <td>42136.557350</td>
-      <td>1.164624e+05</td>
-      <td>26.821584</td>
-      <td>79.966203</td>
-      <td>...</td>
-      <td>0.063298</td>
-      <td>1.431872</td>
-      <td>0.087025</td>
-      <td>1.301934e+04</td>
-      <td>892.026490</td>
-      <td>374.336449</td>
-      <td>1.678239</td>
-      <td>3.201757</td>
-      <td>0.014819</td>
-      <td>0.015860</td>
-    </tr>
-    <tr>
-      <th>std</th>
-      <td>14754.405831</td>
-      <td>4.819986</td>
-      <td>3.287348e+05</td>
-      <td>5.813251</td>
-      <td>7.648861</td>
-      <td>189.157504</td>
-      <td>11524.034138</td>
-      <td>7.300267e+04</td>
-      <td>4.754268</td>
-      <td>18.957256</td>
-      <td>...</td>
-      <td>0.611061</td>
-      <td>1.426454</td>
-      <td>0.150616</td>
-      <td>5.425438e+04</td>
-      <td>4419.432913</td>
-      <td>1543.484514</td>
-      <td>1.977446</td>
-      <td>5.027240</td>
-      <td>0.120828</td>
-      <td>0.124935</td>
-    </tr>
-    <tr>
-      <th>min</th>
-      <td>1001.000000</td>
-      <td>2000.000000</td>
-      <td>6.700000e+01</td>
-      <td>0.000000</td>
-      <td>7.350000</td>
-      <td>178.000000</td>
-      <td>9333.000000</td>
-      <td>0.000000e+00</td>
-      <td>8.300000</td>
-      <td>2.860000</td>
-      <td>...</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>5.000000e+00</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>25%</th>
-      <td>19089.000000</td>
-      <td>2004.000000</td>
-      <td>1.044500e+04</td>
-      <td>8.300000</td>
-      <td>21.740000</td>
-      <td>464.000000</td>
-      <td>34202.000000</td>
-      <td>7.470000e+04</td>
-      <td>23.600000</td>
-      <td>69.460000</td>
-      <td>...</td>
-      <td>0.000000</td>
-      <td>0.710000</td>
-      <td>0.000000</td>
-      <td>9.710000e+02</td>
-      <td>5.000000</td>
-      <td>3.000000</td>
-      <td>0.320000</td>
-      <td>0.490000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>50%</th>
-      <td>29181.000000</td>
-      <td>2008.000000</td>
-      <td>2.351300e+04</td>
-      <td>11.460000</td>
-      <td>25.540000</td>
-      <td>571.000000</td>
-      <td>40657.000000</td>
-      <td>9.640000e+04</td>
-      <td>26.800000</td>
-      <td>87.330000</td>
-      <td>...</td>
-      <td>0.010000</td>
-      <td>1.130000</td>
-      <td>0.040000</td>
-      <td>2.315000e+03</td>
-      <td>37.000000</td>
-      <td>25.000000</td>
-      <td>1.110000</td>
-      <td>1.630000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>75%</th>
-      <td>45086.000000</td>
-      <td>2012.000000</td>
-      <td>6.268300e+04</td>
-      <td>15.315000</td>
-      <td>30.430000</td>
-      <td>680.000000</td>
-      <td>48007.000000</td>
-      <td>1.363000e+05</td>
-      <td>29.800000</td>
-      <td>94.790000</td>
-      <td>...</td>
-      <td>0.040000</td>
-      <td>1.710000</td>
-      <td>0.110000</td>
-      <td>6.844500e+03</td>
-      <td>240.000000</td>
-      <td>140.000000</td>
-      <td>2.320000</td>
-      <td>3.800000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-    </tr>
-    <tr>
-      <th>max</th>
-      <td>56045.000000</td>
-      <td>2016.000000</td>
-      <td>1.003839e+07</td>
-      <td>45.380000</td>
-      <td>100.000000</td>
-      <td>1827.000000</td>
-      <td>123453.000000</td>
-      <td>1.000001e+06</td>
-      <td>50.100000</td>
-      <td>100.000000</td>
-      <td>...</td>
-      <td>48.300000</td>
-      <td>23.490000</td>
-      <td>4.900000</td>
-      <td>1.792186e+06</td>
-      <td>143753.000000</td>
-      <td>47716.000000</td>
-      <td>24.160000</td>
-      <td>118.620000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-    </tr>
-  </tbody>
-</table>
-<p>8 rows × 24 columns</p>
-</div>
-
+![png](output_1_0.png)
 
 
 
 ```python
 #visualization
-df.hist(column= 'poverty_rate', bins = 50)
+#df.hist(column= 'poverty_rate', bins = 50)
 plt.show()
 df.hist(column= 'eviction_rate', bins = 50)
-df.hist(column = 'median_household_income', bins = 50)
-```
-
-
-![png](output_2_0.png)
-
-
-
-
-
-    array([[<matplotlib.axes._subplots.AxesSubplot object at 0x0000022600C836D8>]], dtype=object)
-
-
-
-
-![png](output_2_2.png)
-
-
-
-![png](output_2_3.png)
-
-
-
-```python
-df_sampled = df.sample(frac=.01)
-```
-
-
-```python
-make_plot(df_sampled)
-```
-
-
-![png](output_4_0.png)
-
-
-
-```python
-def get_x_y(df, features=['poverty_rate'], label='eviction_rate'):
-    #features = ['pct_af_am']
-    X = df[features]
-    y = df[label]
-    #
-    #print(X.shape, len(y))
-    return X, y
-```
-
-
-```python
-def make_plot(df, features=['poverty_rate'], label='eviction_rate'):
-    X, y = get_x_y(df, features, label)
-    plt.plot(X, y, '.')
-```
-
-
-```python
-make_plot(df, ['population'], 'eviction_rate')
-```
-
-
-![png](output_7_0.png)
-
-
-
-```python
-df.columns
+#df.hist(column = 'median_household_income', bins = 50)
 ```
 
 
 
 
-    Index(['GEOID', 'year', 'name', 'parent_location', 'population',
-           'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
-           'median_household_income', 'median_property_value', 'rent_burden',
-           'pct_white', 'pct_af_am', 'pct_hispanic', 'pct_am_ind', 'pct_asian',
-           'pct_nh_pi', 'pct_multiple', 'pct_other', 'renter_occupied_households',
-           'eviction_filings', 'evictions', 'eviction_rate',
-           'eviction_filing_rate', 'imputed', 'subbed'],
-          dtype='object')
+    array([[<matplotlib.axes._subplots.AxesSubplot object at 0x0000022617AD2160>]], dtype=object)
 
+
+
+
+![png](output_2_1.png)
 
 
 
@@ -395,84 +80,63 @@ print(df.iloc[0])
 
 
 ```python
-X, y = get_x_y(df, features=['population', 'pct_renter_occupied', 'median_gross_rent', 'poverty_rate', 'rent_burden','pct_af_am'])
 
-# X, y = get_x_y(df, features=['population',
-#        'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
-#        'median_household_income', 'median_property_value', 'rent_burden',
-#        'pct_white', 'pct_af_am', 'pct_multiple', 'pct_other', 'renter_occupied_households'])
-
-
-X, y = get_x_y(df3, features=[ 'year','population',
+X, y = get_x_y(df4, features=[ 'year','population',
        'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
        'median_household_income', 'median_property_value', 'rent_burden',
        'pct_white', 'pct_af_am', 'renter_occupied_households', 'Percent of adults with less than a high school diploma 2012_2016',
        'Percent of adults with a high school diploma only 2012_2016', 'Percent of adults completing some college or associates degree 2012_2016', \
-       'Percent of adults with a bachelors degree or higher 2012_2016','Unemployment_rate_2016', 'Med_HH_Income_Percent_of_State_Total_2016','students_total_enrollments' ])
-
-# X, y = get_x_y(df4, features=[ 'year','population',
-#        'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
-#        'median_household_income', 'median_property_value', 'rent_burden',
-#        'pct_white', 'pct_af_am', 'renter_occupied_households', 'Percent of adults with less than a high school diploma 2012_2016',
-#        'Percent of adults with a high school diploma only 2012_2016', 'Percent of adults completing some college or associates degree 2012_2016', \
-#        'Percent of adults with a bachelors degree or higher 2012_2016','Unemployment_rate_2016', 'Med_HH_Income_Percent_of_State_Total_2016','students_total_enrollments', 'State short_AL',
-#  'State short_AZ',
-#  'State short_CA',
-#  'State short_CO',
-#  'State short_CT',
-#  'State short_DE',
-#  'State short_FL',
-#  'State short_GA',
-#  'State short_HI',
-#  'State short_IA',
-#  'State short_ID',
-#  'State short_IL',
-#  'State short_IN',
-#  'State short_KS',
-#  'State short_KY',
-#  'State short_LA',
-#  'State short_MA',
-#  'State short_MD',
-#  'State short_ME',
-#  'State short_MI',
-#  'State short_MN',
-#  'State short_MO',
-#  'State short_MS',
-#  'State short_MT',
-#  'State short_NC',
-#  'State short_NE',
-#  'State short_NH',
-#  'State short_NJ',
-#  'State short_NM',
-#  'State short_NV',
-#  'State short_NY',
-#  'State short_OH',
-#  'State short_OK',
-#  'State short_OR',
-#  'State short_PA',
-#  'State short_RI',
-#  'State short_SC',
-#  'State short_TN',
-#  'State short_TX',
-#  'State short_UT',
-#  'State short_VA',
-#  'State short_VT',
-#  'State short_WA',
-#  'State short_WI',
-#  'State short_WV',
-#  'State short_WY'])
+       'Percent of adults with a bachelors degree or higher 2012_2016','Unemployment_rate_2016', 'Med_HH_Income_Percent_of_State_Total_2016','students_total_enrollments', 'State short_AL',
+ 'State short_AZ',
+ 'State short_CA',
+ 'State short_CO',
+ 'State short_CT',
+ 'State short_DE',
+ 'State short_FL',
+ 'State short_GA',
+ 'State short_HI',
+ 'State short_IA',
+ 'State short_ID',
+ 'State short_IL',
+ 'State short_IN',
+ 'State short_KS',
+ 'State short_KY',
+ 'State short_LA',
+ 'State short_MA',
+ 'State short_MD',
+ 'State short_ME',
+ 'State short_MI',
+ 'State short_MN',
+ 'State short_MO',
+ 'State short_MS',
+ 'State short_MT',
+ 'State short_NC',
+ 'State short_NE',
+ 'State short_NH',
+ 'State short_NJ',
+ 'State short_NM',
+ 'State short_NV',
+ 'State short_NY',
+ 'State short_OH',
+ 'State short_OK',
+ 'State short_OR',
+ 'State short_PA',
+ 'State short_RI',
+ 'State short_SC',
+ 'State short_TN',
+ 'State short_TX',
+ 'State short_UT',
+ 'State short_VA',
+ 'State short_VT',
+ 'State short_WA',
+ 'State short_WI',
+ 'State short_WV',
+ 'State short_WY'])
 
 
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-```
-
-
-```python
-#clf = linear_model.SGDRegressor(max_iter=1000, tol=1e-5)
-#clf.fit(X_train, y_train)
-#clf.score(X_test, y_test)
 ```
 
 
@@ -509,115 +173,7 @@ np.mean((y_test-np.mean(y_test))**2)**.5
 
 
 ```python
-num_round = 100
-bst = xgb.train(param, xgtrain, num_round, evallist)
-```
-
-    [0]	eval-rmse:1.23858	train-rmse:1.18015
-    [1]	eval-rmse:1.09295	train-rmse:0.988379
-    [2]	eval-rmse:1.05601	train-rmse:0.937815
-    [3]	eval-rmse:0.972679	train-rmse:0.838154
-    [4]	eval-rmse:0.930549	train-rmse:0.780951
-    [5]	eval-rmse:0.922622	train-rmse:0.763522
-    [6]	eval-rmse:0.892202	train-rmse:0.710054
-    [7]	eval-rmse:0.874484	train-rmse:0.683333
-    [8]	eval-rmse:0.852448	train-rmse:0.647566
-    [9]	eval-rmse:0.833398	train-rmse:0.620927
-    [10]	eval-rmse:0.826465	train-rmse:0.605294
-    [11]	eval-rmse:0.817119	train-rmse:0.591738
-    [12]	eval-rmse:0.809983	train-rmse:0.5793
-    [13]	eval-rmse:0.804765	train-rmse:0.567373
-    [14]	eval-rmse:0.79841	train-rmse:0.558188
-    [15]	eval-rmse:0.792258	train-rmse:0.544387
-    [16]	eval-rmse:0.788913	train-rmse:0.536144
-    [17]	eval-rmse:0.784057	train-rmse:0.525883
-    [18]	eval-rmse:0.779387	train-rmse:0.517531
-    [19]	eval-rmse:0.776427	train-rmse:0.508876
-    [20]	eval-rmse:0.771349	train-rmse:0.499002
-    [21]	eval-rmse:0.769189	train-rmse:0.492671
-    [22]	eval-rmse:0.767758	train-rmse:0.485352
-    [23]	eval-rmse:0.7654	train-rmse:0.479393
-    [24]	eval-rmse:0.764366	train-rmse:0.474628
-    [25]	eval-rmse:0.762205	train-rmse:0.46911
-    [26]	eval-rmse:0.76157	train-rmse:0.464271
-    [27]	eval-rmse:0.759763	train-rmse:0.459957
-    [28]	eval-rmse:0.757715	train-rmse:0.455372
-    [29]	eval-rmse:0.756713	train-rmse:0.448699
-    [30]	eval-rmse:0.755067	train-rmse:0.44451
-    [31]	eval-rmse:0.75337	train-rmse:0.439039
-    [32]	eval-rmse:0.752232	train-rmse:0.435959
-    [33]	eval-rmse:0.751524	train-rmse:0.431144
-    [34]	eval-rmse:0.750721	train-rmse:0.42782
-    [35]	eval-rmse:0.749609	train-rmse:0.424201
-    [36]	eval-rmse:0.748694	train-rmse:0.421762
-    [37]	eval-rmse:0.747488	train-rmse:0.418067
-    [38]	eval-rmse:0.746219	train-rmse:0.413411
-    [39]	eval-rmse:0.745439	train-rmse:0.410178
-    [40]	eval-rmse:0.744904	train-rmse:0.40844
-    [41]	eval-rmse:0.743333	train-rmse:0.406306
-    [42]	eval-rmse:0.743124	train-rmse:0.404133
-    [43]	eval-rmse:0.742512	train-rmse:0.402759
-    [44]	eval-rmse:0.741468	train-rmse:0.400569
-    [45]	eval-rmse:0.741388	train-rmse:0.399326
-    [46]	eval-rmse:0.740727	train-rmse:0.396629
-    [47]	eval-rmse:0.740141	train-rmse:0.394025
-    [48]	eval-rmse:0.73956	train-rmse:0.391821
-    [49]	eval-rmse:0.738793	train-rmse:0.38995
-    [50]	eval-rmse:0.738225	train-rmse:0.38809
-    [51]	eval-rmse:0.737543	train-rmse:0.386413
-    [52]	eval-rmse:0.737063	train-rmse:0.384867
-    [53]	eval-rmse:0.737043	train-rmse:0.383578
-    [54]	eval-rmse:0.737119	train-rmse:0.381645
-    [55]	eval-rmse:0.73663	train-rmse:0.380025
-    [56]	eval-rmse:0.736011	train-rmse:0.37846
-    [57]	eval-rmse:0.735624	train-rmse:0.377511
-    [58]	eval-rmse:0.735082	train-rmse:0.375943
-    [59]	eval-rmse:0.734961	train-rmse:0.375119
-    [60]	eval-rmse:0.734784	train-rmse:0.37414
-    [61]	eval-rmse:0.734303	train-rmse:0.372327
-    [62]	eval-rmse:0.73375	train-rmse:0.370252
-    [63]	eval-rmse:0.733334	train-rmse:0.368603
-    [64]	eval-rmse:0.732935	train-rmse:0.366876
-    [65]	eval-rmse:0.732768	train-rmse:0.365608
-    [66]	eval-rmse:0.732319	train-rmse:0.364234
-    [67]	eval-rmse:0.732019	train-rmse:0.363234
-    [68]	eval-rmse:0.731889	train-rmse:0.36155
-    [69]	eval-rmse:0.731151	train-rmse:0.359438
-    [70]	eval-rmse:0.730545	train-rmse:0.358776
-    [71]	eval-rmse:0.730245	train-rmse:0.357989
-    [72]	eval-rmse:0.729979	train-rmse:0.357027
-    [73]	eval-rmse:0.72993	train-rmse:0.356248
-    [74]	eval-rmse:0.729248	train-rmse:0.354029
-    [75]	eval-rmse:0.728888	train-rmse:0.352813
-    [76]	eval-rmse:0.728785	train-rmse:0.352092
-    [77]	eval-rmse:0.72836	train-rmse:0.351148
-    [78]	eval-rmse:0.72799	train-rmse:0.349113
-    [79]	eval-rmse:0.727918	train-rmse:0.347727
-    [80]	eval-rmse:0.727655	train-rmse:0.34699
-    [81]	eval-rmse:0.727456	train-rmse:0.34621
-    [82]	eval-rmse:0.727626	train-rmse:0.345046
-    [83]	eval-rmse:0.727451	train-rmse:0.343739
-    [84]	eval-rmse:0.727099	train-rmse:0.343228
-    [85]	eval-rmse:0.726471	train-rmse:0.342272
-    [86]	eval-rmse:0.726281	train-rmse:0.341267
-    [87]	eval-rmse:0.726053	train-rmse:0.340728
-    [88]	eval-rmse:0.725786	train-rmse:0.340136
-    [89]	eval-rmse:0.725701	train-rmse:0.339383
-    [90]	eval-rmse:0.725361	train-rmse:0.338371
-    [91]	eval-rmse:0.72487	train-rmse:0.337583
-    [92]	eval-rmse:0.724933	train-rmse:0.337
-    [93]	eval-rmse:0.724982	train-rmse:0.336329
-    [94]	eval-rmse:0.724831	train-rmse:0.335333
-    [95]	eval-rmse:0.724617	train-rmse:0.334656
-    [96]	eval-rmse:0.724213	train-rmse:0.333663
-    [97]	eval-rmse:0.72369	train-rmse:0.332918
-    [98]	eval-rmse:0.72353	train-rmse:0.332261
-    [99]	eval-rmse:0.723449	train-rmse:0.331351
-    
-
-
-```python
-num_round = 100
+num_round = 1000
 bst = xgb.train(param, xgtrain, num_round, evallist)
 ```
 
@@ -721,105 +277,916 @@ bst = xgb.train(param, xgtrain, num_round, evallist)
     [97]	eval-rmse:0.692568	train-rmse:0.32861
     [98]	eval-rmse:0.692383	train-rmse:0.328122
     [99]	eval-rmse:0.692407	train-rmse:0.327509
+    [100]	eval-rmse:0.692249	train-rmse:0.327079
+    [101]	eval-rmse:0.691892	train-rmse:0.32598
+    [102]	eval-rmse:0.691986	train-rmse:0.324737
+    [103]	eval-rmse:0.692044	train-rmse:0.324118
+    [104]	eval-rmse:0.691781	train-rmse:0.322647
+    [105]	eval-rmse:0.691087	train-rmse:0.32078
+    [106]	eval-rmse:0.690921	train-rmse:0.320062
+    [107]	eval-rmse:0.690849	train-rmse:0.31971
+    [108]	eval-rmse:0.690764	train-rmse:0.318817
+    [109]	eval-rmse:0.690882	train-rmse:0.318453
+    [110]	eval-rmse:0.690773	train-rmse:0.31794
+    [111]	eval-rmse:0.690524	train-rmse:0.317173
+    [112]	eval-rmse:0.690547	train-rmse:0.316907
+    [113]	eval-rmse:0.690399	train-rmse:0.31642
+    [114]	eval-rmse:0.69038	train-rmse:0.316135
+    [115]	eval-rmse:0.690395	train-rmse:0.315602
+    [116]	eval-rmse:0.69051	train-rmse:0.31523
+    [117]	eval-rmse:0.6903	train-rmse:0.314372
+    [118]	eval-rmse:0.690101	train-rmse:0.313628
+    [119]	eval-rmse:0.689952	train-rmse:0.313303
+    [120]	eval-rmse:0.689875	train-rmse:0.312933
+    [121]	eval-rmse:0.689807	train-rmse:0.312614
+    [122]	eval-rmse:0.689693	train-rmse:0.31216
+    [123]	eval-rmse:0.689691	train-rmse:0.311729
+    [124]	eval-rmse:0.68959	train-rmse:0.311085
+    [125]	eval-rmse:0.689727	train-rmse:0.310318
+    [126]	eval-rmse:0.689559	train-rmse:0.310125
+    [127]	eval-rmse:0.689448	train-rmse:0.309735
+    [128]	eval-rmse:0.689453	train-rmse:0.308693
+    [129]	eval-rmse:0.689376	train-rmse:0.308498
+    [130]	eval-rmse:0.689405	train-rmse:0.308008
+    [131]	eval-rmse:0.689213	train-rmse:0.307517
+    [132]	eval-rmse:0.689076	train-rmse:0.307128
+    [133]	eval-rmse:0.689075	train-rmse:0.30674
+    [134]	eval-rmse:0.688816	train-rmse:0.30626
+    [135]	eval-rmse:0.688558	train-rmse:0.305505
+    [136]	eval-rmse:0.688511	train-rmse:0.305174
+    [137]	eval-rmse:0.688445	train-rmse:0.304952
+    [138]	eval-rmse:0.688399	train-rmse:0.304752
+    [139]	eval-rmse:0.68821	train-rmse:0.304168
+    [140]	eval-rmse:0.68822	train-rmse:0.303324
+    [141]	eval-rmse:0.688022	train-rmse:0.302939
+    [142]	eval-rmse:0.687809	train-rmse:0.30263
+    [143]	eval-rmse:0.687701	train-rmse:0.302398
+    [144]	eval-rmse:0.68774	train-rmse:0.30201
+    [145]	eval-rmse:0.68772	train-rmse:0.301732
+    [146]	eval-rmse:0.687735	train-rmse:0.301168
+    [147]	eval-rmse:0.687684	train-rmse:0.300971
+    [148]	eval-rmse:0.687722	train-rmse:0.3005
+    [149]	eval-rmse:0.687694	train-rmse:0.300084
+    [150]	eval-rmse:0.687698	train-rmse:0.299702
+    [151]	eval-rmse:0.687716	train-rmse:0.299482
+    [152]	eval-rmse:0.687683	train-rmse:0.298997
+    [153]	eval-rmse:0.687482	train-rmse:0.298596
+    [154]	eval-rmse:0.687352	train-rmse:0.298183
+    [155]	eval-rmse:0.687403	train-rmse:0.298073
+    [156]	eval-rmse:0.687348	train-rmse:0.297749
+    [157]	eval-rmse:0.687241	train-rmse:0.297627
+    [158]	eval-rmse:0.687254	train-rmse:0.297062
+    [159]	eval-rmse:0.687182	train-rmse:0.296946
+    [160]	eval-rmse:0.687091	train-rmse:0.296496
+    [161]	eval-rmse:0.687036	train-rmse:0.296269
+    [162]	eval-rmse:0.686922	train-rmse:0.295876
+    [163]	eval-rmse:0.686902	train-rmse:0.295665
+    [164]	eval-rmse:0.686836	train-rmse:0.295528
+    [165]	eval-rmse:0.686968	train-rmse:0.295279
+    [166]	eval-rmse:0.687106	train-rmse:0.294633
+    [167]	eval-rmse:0.687011	train-rmse:0.294538
+    [168]	eval-rmse:0.686797	train-rmse:0.294392
+    [169]	eval-rmse:0.686752	train-rmse:0.294149
+    [170]	eval-rmse:0.686688	train-rmse:0.293746
+    [171]	eval-rmse:0.686677	train-rmse:0.293392
+    [172]	eval-rmse:0.68668	train-rmse:0.292971
+    [173]	eval-rmse:0.68665	train-rmse:0.292819
+    [174]	eval-rmse:0.686596	train-rmse:0.2924
+    [175]	eval-rmse:0.68649	train-rmse:0.291954
+    [176]	eval-rmse:0.686507	train-rmse:0.291767
+    [177]	eval-rmse:0.68639	train-rmse:0.290965
+    [178]	eval-rmse:0.68629	train-rmse:0.290762
+    [179]	eval-rmse:0.686119	train-rmse:0.290348
+    [180]	eval-rmse:0.685983	train-rmse:0.289807
+    [181]	eval-rmse:0.685982	train-rmse:0.289612
+    [182]	eval-rmse:0.685934	train-rmse:0.289315
+    [183]	eval-rmse:0.685886	train-rmse:0.288904
+    [184]	eval-rmse:0.685938	train-rmse:0.288685
+    [185]	eval-rmse:0.685912	train-rmse:0.288505
+    [186]	eval-rmse:0.685918	train-rmse:0.288424
+    [187]	eval-rmse:0.685931	train-rmse:0.288247
+    [188]	eval-rmse:0.68589	train-rmse:0.288087
+    [189]	eval-rmse:0.685841	train-rmse:0.287932
+    [190]	eval-rmse:0.685871	train-rmse:0.287657
+    [191]	eval-rmse:0.685859	train-rmse:0.287542
+    [192]	eval-rmse:0.685799	train-rmse:0.287285
+    [193]	eval-rmse:0.685752	train-rmse:0.28664
+    [194]	eval-rmse:0.685682	train-rmse:0.286244
+    [195]	eval-rmse:0.685678	train-rmse:0.286014
+    [196]	eval-rmse:0.685642	train-rmse:0.285838
+    [197]	eval-rmse:0.685575	train-rmse:0.285167
+    [198]	eval-rmse:0.685587	train-rmse:0.284916
+    [199]	eval-rmse:0.685629	train-rmse:0.284807
+    [200]	eval-rmse:0.685578	train-rmse:0.284446
+    [201]	eval-rmse:0.685412	train-rmse:0.28405
+    [202]	eval-rmse:0.685335	train-rmse:0.283875
+    [203]	eval-rmse:0.685218	train-rmse:0.283723
+    [204]	eval-rmse:0.685299	train-rmse:0.283554
+    [205]	eval-rmse:0.685309	train-rmse:0.283246
+    [206]	eval-rmse:0.685136	train-rmse:0.282895
+    [207]	eval-rmse:0.685231	train-rmse:0.282775
+    [208]	eval-rmse:0.685224	train-rmse:0.282724
+    [209]	eval-rmse:0.6852	train-rmse:0.282578
+    [210]	eval-rmse:0.685149	train-rmse:0.282519
+    [211]	eval-rmse:0.685015	train-rmse:0.282332
+    [212]	eval-rmse:0.685081	train-rmse:0.282161
+    [213]	eval-rmse:0.684962	train-rmse:0.281844
+    [214]	eval-rmse:0.684909	train-rmse:0.281636
+    [215]	eval-rmse:0.684855	train-rmse:0.28146
+    [216]	eval-rmse:0.684846	train-rmse:0.281283
+    [217]	eval-rmse:0.684814	train-rmse:0.281168
+    [218]	eval-rmse:0.684901	train-rmse:0.280922
+    [219]	eval-rmse:0.684931	train-rmse:0.280622
+    [220]	eval-rmse:0.684973	train-rmse:0.280489
+    [221]	eval-rmse:0.684821	train-rmse:0.280166
+    [222]	eval-rmse:0.684792	train-rmse:0.280064
+    [223]	eval-rmse:0.684725	train-rmse:0.279999
+    [224]	eval-rmse:0.684812	train-rmse:0.279638
+    [225]	eval-rmse:0.6848	train-rmse:0.279542
+    [226]	eval-rmse:0.684886	train-rmse:0.278994
+    [227]	eval-rmse:0.684986	train-rmse:0.278703
+    [228]	eval-rmse:0.684915	train-rmse:0.278352
+    [229]	eval-rmse:0.684975	train-rmse:0.278147
+    [230]	eval-rmse:0.684952	train-rmse:0.278058
+    [231]	eval-rmse:0.684896	train-rmse:0.277992
+    [232]	eval-rmse:0.684841	train-rmse:0.277755
+    [233]	eval-rmse:0.684903	train-rmse:0.277528
+    [234]	eval-rmse:0.68482	train-rmse:0.277424
+    [235]	eval-rmse:0.684903	train-rmse:0.277327
+    [236]	eval-rmse:0.684716	train-rmse:0.277093
+    [237]	eval-rmse:0.684681	train-rmse:0.277048
+    [238]	eval-rmse:0.684689	train-rmse:0.276832
+    [239]	eval-rmse:0.684822	train-rmse:0.276567
+    [240]	eval-rmse:0.684791	train-rmse:0.276421
+    [241]	eval-rmse:0.684677	train-rmse:0.276267
+    [242]	eval-rmse:0.684686	train-rmse:0.276163
+    [243]	eval-rmse:0.684582	train-rmse:0.275974
+    [244]	eval-rmse:0.684591	train-rmse:0.275603
+    [245]	eval-rmse:0.684657	train-rmse:0.275525
+    [246]	eval-rmse:0.684591	train-rmse:0.275357
+    [247]	eval-rmse:0.684556	train-rmse:0.27531
+    [248]	eval-rmse:0.684489	train-rmse:0.275212
+    [249]	eval-rmse:0.684642	train-rmse:0.274952
+    [250]	eval-rmse:0.684606	train-rmse:0.274744
+    [251]	eval-rmse:0.684545	train-rmse:0.274594
+    [252]	eval-rmse:0.684521	train-rmse:0.274468
+    [253]	eval-rmse:0.684482	train-rmse:0.274358
+    [254]	eval-rmse:0.684462	train-rmse:0.274306
+    [255]	eval-rmse:0.684468	train-rmse:0.274134
+    [256]	eval-rmse:0.684472	train-rmse:0.273876
+    [257]	eval-rmse:0.684434	train-rmse:0.273778
+    [258]	eval-rmse:0.684447	train-rmse:0.273722
+    [259]	eval-rmse:0.684514	train-rmse:0.273605
+    [260]	eval-rmse:0.684452	train-rmse:0.273386
+    [261]	eval-rmse:0.684474	train-rmse:0.273316
+    [262]	eval-rmse:0.684421	train-rmse:0.273207
+    [263]	eval-rmse:0.68455	train-rmse:0.273101
+    [264]	eval-rmse:0.684432	train-rmse:0.273001
+    [265]	eval-rmse:0.684488	train-rmse:0.272774
+    [266]	eval-rmse:0.684407	train-rmse:0.27262
+    [267]	eval-rmse:0.684399	train-rmse:0.272572
+    [268]	eval-rmse:0.684387	train-rmse:0.272534
+    [269]	eval-rmse:0.684397	train-rmse:0.272487
+    [270]	eval-rmse:0.684361	train-rmse:0.272338
+    [271]	eval-rmse:0.684405	train-rmse:0.272288
+    [272]	eval-rmse:0.684421	train-rmse:0.272237
+    [273]	eval-rmse:0.684398	train-rmse:0.272112
+    [274]	eval-rmse:0.684544	train-rmse:0.271786
+    [275]	eval-rmse:0.684398	train-rmse:0.271571
+    [276]	eval-rmse:0.684353	train-rmse:0.271467
+    [277]	eval-rmse:0.684266	train-rmse:0.271238
+    [278]	eval-rmse:0.684256	train-rmse:0.271184
+    [279]	eval-rmse:0.684246	train-rmse:0.271032
+    [280]	eval-rmse:0.684226	train-rmse:0.270878
+    [281]	eval-rmse:0.684285	train-rmse:0.27074
+    [282]	eval-rmse:0.684278	train-rmse:0.27071
+    [283]	eval-rmse:0.684254	train-rmse:0.270565
+    [284]	eval-rmse:0.684121	train-rmse:0.270448
+    [285]	eval-rmse:0.684175	train-rmse:0.270313
+    [286]	eval-rmse:0.684193	train-rmse:0.270089
+    [287]	eval-rmse:0.684161	train-rmse:0.270073
+    [288]	eval-rmse:0.684128	train-rmse:0.269937
+    [289]	eval-rmse:0.684059	train-rmse:0.269711
+    [290]	eval-rmse:0.684124	train-rmse:0.269596
+    [291]	eval-rmse:0.684038	train-rmse:0.26938
+    [292]	eval-rmse:0.684048	train-rmse:0.269302
+    [293]	eval-rmse:0.68401	train-rmse:0.269197
+    [294]	eval-rmse:0.683958	train-rmse:0.269048
+    [295]	eval-rmse:0.683927	train-rmse:0.269005
+    [296]	eval-rmse:0.684012	train-rmse:0.268794
+    [297]	eval-rmse:0.684008	train-rmse:0.268748
+    [298]	eval-rmse:0.684258	train-rmse:0.26832
+    [299]	eval-rmse:0.684202	train-rmse:0.268179
+    [300]	eval-rmse:0.684253	train-rmse:0.268058
+    [301]	eval-rmse:0.684168	train-rmse:0.267975
+    [302]	eval-rmse:0.684236	train-rmse:0.267799
+    [303]	eval-rmse:0.684265	train-rmse:0.267581
+    [304]	eval-rmse:0.684171	train-rmse:0.267485
+    [305]	eval-rmse:0.684199	train-rmse:0.267363
+    [306]	eval-rmse:0.684265	train-rmse:0.267297
+    [307]	eval-rmse:0.684211	train-rmse:0.267244
+    [308]	eval-rmse:0.684154	train-rmse:0.26714
+    [309]	eval-rmse:0.6841	train-rmse:0.266993
+    [310]	eval-rmse:0.684057	train-rmse:0.266974
+    [311]	eval-rmse:0.684104	train-rmse:0.266937
+    [312]	eval-rmse:0.684045	train-rmse:0.266884
+    [313]	eval-rmse:0.684015	train-rmse:0.26679
+    [314]	eval-rmse:0.683979	train-rmse:0.266728
+    [315]	eval-rmse:0.684016	train-rmse:0.266545
+    [316]	eval-rmse:0.684058	train-rmse:0.266488
+    [317]	eval-rmse:0.683936	train-rmse:0.266367
+    [318]	eval-rmse:0.683857	train-rmse:0.26626
+    [319]	eval-rmse:0.683799	train-rmse:0.266205
+    [320]	eval-rmse:0.683772	train-rmse:0.265726
+    [321]	eval-rmse:0.683733	train-rmse:0.26568
+    [322]	eval-rmse:0.683817	train-rmse:0.265598
+    [323]	eval-rmse:0.683821	train-rmse:0.265364
+    [324]	eval-rmse:0.683806	train-rmse:0.265299
+    [325]	eval-rmse:0.683818	train-rmse:0.265207
+    [326]	eval-rmse:0.68394	train-rmse:0.265034
+    [327]	eval-rmse:0.683905	train-rmse:0.264927
+    [328]	eval-rmse:0.683877	train-rmse:0.264845
+    [329]	eval-rmse:0.683862	train-rmse:0.264757
+    [330]	eval-rmse:0.683795	train-rmse:0.264519
+    [331]	eval-rmse:0.683795	train-rmse:0.264426
+    [332]	eval-rmse:0.683806	train-rmse:0.264332
+    [333]	eval-rmse:0.68379	train-rmse:0.264261
+    [334]	eval-rmse:0.683717	train-rmse:0.264135
+    [335]	eval-rmse:0.68379	train-rmse:0.264061
+    [336]	eval-rmse:0.683782	train-rmse:0.26404
+    [337]	eval-rmse:0.683801	train-rmse:0.263875
+    [338]	eval-rmse:0.683786	train-rmse:0.263825
+    [339]	eval-rmse:0.683826	train-rmse:0.263643
+    [340]	eval-rmse:0.683769	train-rmse:0.263557
+    [341]	eval-rmse:0.683721	train-rmse:0.26351
+    [342]	eval-rmse:0.683707	train-rmse:0.263494
+    [343]	eval-rmse:0.68371	train-rmse:0.263382
+    [344]	eval-rmse:0.683735	train-rmse:0.263216
+    [345]	eval-rmse:0.683723	train-rmse:0.263184
+    [346]	eval-rmse:0.68376	train-rmse:0.263134
+    [347]	eval-rmse:0.683743	train-rmse:0.263044
+    [348]	eval-rmse:0.683739	train-rmse:0.262949
+    [349]	eval-rmse:0.683784	train-rmse:0.262815
+    [350]	eval-rmse:0.683762	train-rmse:0.262788
+    [351]	eval-rmse:0.683746	train-rmse:0.262766
+    [352]	eval-rmse:0.683746	train-rmse:0.262729
+    [353]	eval-rmse:0.683801	train-rmse:0.262652
+    [354]	eval-rmse:0.683699	train-rmse:0.262409
+    [355]	eval-rmse:0.683704	train-rmse:0.26229
+    [356]	eval-rmse:0.683754	train-rmse:0.262194
+    [357]	eval-rmse:0.683724	train-rmse:0.262142
+    [358]	eval-rmse:0.683755	train-rmse:0.261769
+    [359]	eval-rmse:0.683805	train-rmse:0.261717
+    [360]	eval-rmse:0.683809	train-rmse:0.261577
+    [361]	eval-rmse:0.683869	train-rmse:0.261375
+    [362]	eval-rmse:0.683876	train-rmse:0.261226
+    [363]	eval-rmse:0.683917	train-rmse:0.26114
+    [364]	eval-rmse:0.683934	train-rmse:0.261088
+    [365]	eval-rmse:0.683923	train-rmse:0.261039
+    [366]	eval-rmse:0.683875	train-rmse:0.260999
+    [367]	eval-rmse:0.683828	train-rmse:0.260937
+    [368]	eval-rmse:0.683802	train-rmse:0.260894
+    [369]	eval-rmse:0.683827	train-rmse:0.260835
+    [370]	eval-rmse:0.683821	train-rmse:0.260684
+    [371]	eval-rmse:0.683797	train-rmse:0.260592
+    [372]	eval-rmse:0.683766	train-rmse:0.260557
+    [373]	eval-rmse:0.683714	train-rmse:0.260316
+    [374]	eval-rmse:0.683652	train-rmse:0.260064
+    [375]	eval-rmse:0.68365	train-rmse:0.260049
+    [376]	eval-rmse:0.683628	train-rmse:0.259936
+    [377]	eval-rmse:0.683591	train-rmse:0.2599
+    [378]	eval-rmse:0.683598	train-rmse:0.259881
+    [379]	eval-rmse:0.68355	train-rmse:0.25985
+    [380]	eval-rmse:0.683583	train-rmse:0.259709
+    [381]	eval-rmse:0.683558	train-rmse:0.259668
+    [382]	eval-rmse:0.68356	train-rmse:0.259615
+    [383]	eval-rmse:0.683504	train-rmse:0.259525
+    [384]	eval-rmse:0.683486	train-rmse:0.259471
+    [385]	eval-rmse:0.683455	train-rmse:0.259115
+    [386]	eval-rmse:0.68341	train-rmse:0.259002
+    [387]	eval-rmse:0.68341	train-rmse:0.259002
+    [388]	eval-rmse:0.68341	train-rmse:0.259002
+    [389]	eval-rmse:0.68341	train-rmse:0.259002
+    [390]	eval-rmse:0.68341	train-rmse:0.259002
+    [391]	eval-rmse:0.68341	train-rmse:0.259002
+    [392]	eval-rmse:0.68341	train-rmse:0.259002
+    [393]	eval-rmse:0.68341	train-rmse:0.259002
+    [394]	eval-rmse:0.68341	train-rmse:0.259002
+    [395]	eval-rmse:0.68341	train-rmse:0.259002
+    [396]	eval-rmse:0.68341	train-rmse:0.259002
+    [397]	eval-rmse:0.68341	train-rmse:0.259002
+    [398]	eval-rmse:0.68341	train-rmse:0.259002
+    [399]	eval-rmse:0.68341	train-rmse:0.259002
+    [400]	eval-rmse:0.68341	train-rmse:0.259002
+    [401]	eval-rmse:0.68341	train-rmse:0.259002
+    [402]	eval-rmse:0.68341	train-rmse:0.259002
+    [403]	eval-rmse:0.68341	train-rmse:0.259002
+    [404]	eval-rmse:0.68341	train-rmse:0.259002
+    [405]	eval-rmse:0.68341	train-rmse:0.259002
+    [406]	eval-rmse:0.68341	train-rmse:0.259002
+    [407]	eval-rmse:0.68341	train-rmse:0.259002
+    [408]	eval-rmse:0.68341	train-rmse:0.259002
+    [409]	eval-rmse:0.68341	train-rmse:0.259002
+    [410]	eval-rmse:0.68341	train-rmse:0.259002
+    [411]	eval-rmse:0.68341	train-rmse:0.259002
+    [412]	eval-rmse:0.68341	train-rmse:0.259002
+    [413]	eval-rmse:0.68341	train-rmse:0.259002
+    [414]	eval-rmse:0.68341	train-rmse:0.259002
+    [415]	eval-rmse:0.68341	train-rmse:0.259002
+    [416]	eval-rmse:0.68341	train-rmse:0.259002
+    [417]	eval-rmse:0.68341	train-rmse:0.259002
+    [418]	eval-rmse:0.68341	train-rmse:0.259002
+    [419]	eval-rmse:0.68341	train-rmse:0.259002
+    [420]	eval-rmse:0.68341	train-rmse:0.259002
+    [421]	eval-rmse:0.68341	train-rmse:0.259002
+    [422]	eval-rmse:0.68341	train-rmse:0.259002
+    [423]	eval-rmse:0.68341	train-rmse:0.259002
+    [424]	eval-rmse:0.68341	train-rmse:0.259002
+    [425]	eval-rmse:0.68341	train-rmse:0.259002
+    [426]	eval-rmse:0.68341	train-rmse:0.259002
+    [427]	eval-rmse:0.68341	train-rmse:0.259002
+    [428]	eval-rmse:0.68341	train-rmse:0.259002
+    [429]	eval-rmse:0.68341	train-rmse:0.259002
+    [430]	eval-rmse:0.68341	train-rmse:0.259002
+    [431]	eval-rmse:0.68341	train-rmse:0.259002
+    [432]	eval-rmse:0.68341	train-rmse:0.259002
+    [433]	eval-rmse:0.68341	train-rmse:0.259002
+    [434]	eval-rmse:0.68341	train-rmse:0.259002
+    [435]	eval-rmse:0.68341	train-rmse:0.259002
+    [436]	eval-rmse:0.68341	train-rmse:0.259002
+    [437]	eval-rmse:0.68341	train-rmse:0.259002
+    [438]	eval-rmse:0.68341	train-rmse:0.259002
+    [439]	eval-rmse:0.68341	train-rmse:0.259002
+    [440]	eval-rmse:0.68341	train-rmse:0.259002
+    [441]	eval-rmse:0.68341	train-rmse:0.259002
+    [442]	eval-rmse:0.68341	train-rmse:0.259002
+    [443]	eval-rmse:0.68341	train-rmse:0.259002
+    [444]	eval-rmse:0.68341	train-rmse:0.259002
+    [445]	eval-rmse:0.68341	train-rmse:0.259002
+    [446]	eval-rmse:0.68341	train-rmse:0.259002
+    [447]	eval-rmse:0.68341	train-rmse:0.259002
+    [448]	eval-rmse:0.68341	train-rmse:0.259002
+    [449]	eval-rmse:0.68341	train-rmse:0.259002
+    [450]	eval-rmse:0.68341	train-rmse:0.259002
+    [451]	eval-rmse:0.68341	train-rmse:0.259002
+    [452]	eval-rmse:0.68341	train-rmse:0.259002
+    [453]	eval-rmse:0.68341	train-rmse:0.259002
+    [454]	eval-rmse:0.68341	train-rmse:0.259002
+    [455]	eval-rmse:0.68341	train-rmse:0.259002
+    [456]	eval-rmse:0.68341	train-rmse:0.259002
+    [457]	eval-rmse:0.68341	train-rmse:0.259002
+    [458]	eval-rmse:0.68341	train-rmse:0.259002
+    [459]	eval-rmse:0.68341	train-rmse:0.259002
+    [460]	eval-rmse:0.68341	train-rmse:0.259002
+    [461]	eval-rmse:0.68341	train-rmse:0.259002
+    [462]	eval-rmse:0.68341	train-rmse:0.259002
+    [463]	eval-rmse:0.68341	train-rmse:0.259002
+    [464]	eval-rmse:0.68341	train-rmse:0.259002
+    [465]	eval-rmse:0.68341	train-rmse:0.259002
+    [466]	eval-rmse:0.68341	train-rmse:0.259002
+    [467]	eval-rmse:0.68341	train-rmse:0.259002
+    [468]	eval-rmse:0.68341	train-rmse:0.259002
+    [469]	eval-rmse:0.68341	train-rmse:0.259002
+    [470]	eval-rmse:0.68341	train-rmse:0.259002
+    [471]	eval-rmse:0.68341	train-rmse:0.259002
+    [472]	eval-rmse:0.68341	train-rmse:0.259002
+    [473]	eval-rmse:0.68341	train-rmse:0.259002
+    [474]	eval-rmse:0.68341	train-rmse:0.259002
+    [475]	eval-rmse:0.68341	train-rmse:0.259002
+    [476]	eval-rmse:0.68341	train-rmse:0.259002
+    [477]	eval-rmse:0.68341	train-rmse:0.259002
+    [478]	eval-rmse:0.68341	train-rmse:0.259002
+    [479]	eval-rmse:0.68341	train-rmse:0.259002
+    [480]	eval-rmse:0.68341	train-rmse:0.259002
+    [481]	eval-rmse:0.68341	train-rmse:0.259002
+    [482]	eval-rmse:0.68341	train-rmse:0.259002
+    [483]	eval-rmse:0.68341	train-rmse:0.259002
+    [484]	eval-rmse:0.68341	train-rmse:0.259002
+    [485]	eval-rmse:0.68341	train-rmse:0.259002
+    [486]	eval-rmse:0.68341	train-rmse:0.259002
+    [487]	eval-rmse:0.68341	train-rmse:0.259002
+    [488]	eval-rmse:0.68341	train-rmse:0.259002
+    [489]	eval-rmse:0.68341	train-rmse:0.259002
+    [490]	eval-rmse:0.68341	train-rmse:0.259002
+    [491]	eval-rmse:0.68341	train-rmse:0.259002
+    [492]	eval-rmse:0.68341	train-rmse:0.259002
+    [493]	eval-rmse:0.68341	train-rmse:0.259002
+    [494]	eval-rmse:0.68341	train-rmse:0.259002
+    [495]	eval-rmse:0.68341	train-rmse:0.259002
+    [496]	eval-rmse:0.68341	train-rmse:0.259002
+    [497]	eval-rmse:0.68341	train-rmse:0.259002
+    [498]	eval-rmse:0.68341	train-rmse:0.259002
+    [499]	eval-rmse:0.68341	train-rmse:0.259002
+    [500]	eval-rmse:0.68341	train-rmse:0.259002
+    [501]	eval-rmse:0.68341	train-rmse:0.259002
+    [502]	eval-rmse:0.68341	train-rmse:0.259002
+    [503]	eval-rmse:0.68341	train-rmse:0.259002
+    [504]	eval-rmse:0.68341	train-rmse:0.259002
+    [505]	eval-rmse:0.68341	train-rmse:0.259002
+    [506]	eval-rmse:0.68341	train-rmse:0.259002
+    [507]	eval-rmse:0.68341	train-rmse:0.259002
+    [508]	eval-rmse:0.68341	train-rmse:0.259002
+    [509]	eval-rmse:0.68341	train-rmse:0.259002
+    [510]	eval-rmse:0.68341	train-rmse:0.259002
+    [511]	eval-rmse:0.68341	train-rmse:0.259002
+    [512]	eval-rmse:0.68341	train-rmse:0.259002
+    [513]	eval-rmse:0.68341	train-rmse:0.259002
+    [514]	eval-rmse:0.68341	train-rmse:0.259002
+    [515]	eval-rmse:0.68341	train-rmse:0.259002
+    [516]	eval-rmse:0.68341	train-rmse:0.259002
+    [517]	eval-rmse:0.68341	train-rmse:0.259002
+    [518]	eval-rmse:0.68341	train-rmse:0.259002
+    [519]	eval-rmse:0.68341	train-rmse:0.259002
+    [520]	eval-rmse:0.68341	train-rmse:0.259002
+    [521]	eval-rmse:0.68341	train-rmse:0.259002
+    [522]	eval-rmse:0.68341	train-rmse:0.259002
+    [523]	eval-rmse:0.68341	train-rmse:0.259002
+    [524]	eval-rmse:0.68341	train-rmse:0.259002
+    [525]	eval-rmse:0.68341	train-rmse:0.259002
+    [526]	eval-rmse:0.68341	train-rmse:0.259002
+    [527]	eval-rmse:0.68341	train-rmse:0.259002
+    [528]	eval-rmse:0.68341	train-rmse:0.259002
+    [529]	eval-rmse:0.68341	train-rmse:0.259002
+    [530]	eval-rmse:0.68341	train-rmse:0.259002
+    [531]	eval-rmse:0.68341	train-rmse:0.259002
+    [532]	eval-rmse:0.68341	train-rmse:0.259002
+    [533]	eval-rmse:0.68341	train-rmse:0.259002
+    [534]	eval-rmse:0.68341	train-rmse:0.259002
+    [535]	eval-rmse:0.68341	train-rmse:0.259002
+    [536]	eval-rmse:0.68341	train-rmse:0.259002
+    [537]	eval-rmse:0.68341	train-rmse:0.259002
+    [538]	eval-rmse:0.68341	train-rmse:0.259002
+    [539]	eval-rmse:0.68341	train-rmse:0.259002
+    [540]	eval-rmse:0.68341	train-rmse:0.259002
+    [541]	eval-rmse:0.68341	train-rmse:0.259002
+    [542]	eval-rmse:0.68341	train-rmse:0.259002
+    [543]	eval-rmse:0.68341	train-rmse:0.259002
+    [544]	eval-rmse:0.68341	train-rmse:0.259002
+    [545]	eval-rmse:0.68341	train-rmse:0.259002
+    [546]	eval-rmse:0.68341	train-rmse:0.259002
+    [547]	eval-rmse:0.68341	train-rmse:0.259002
+    [548]	eval-rmse:0.68341	train-rmse:0.259002
+    [549]	eval-rmse:0.68341	train-rmse:0.259002
+    [550]	eval-rmse:0.68341	train-rmse:0.259002
+    [551]	eval-rmse:0.68341	train-rmse:0.259002
+    [552]	eval-rmse:0.68341	train-rmse:0.259002
+    [553]	eval-rmse:0.68341	train-rmse:0.259002
+    [554]	eval-rmse:0.68341	train-rmse:0.259002
+    [555]	eval-rmse:0.68341	train-rmse:0.259002
+    [556]	eval-rmse:0.68341	train-rmse:0.259002
+    [557]	eval-rmse:0.68341	train-rmse:0.259002
+    [558]	eval-rmse:0.68341	train-rmse:0.259002
+    [559]	eval-rmse:0.68341	train-rmse:0.259002
+    [560]	eval-rmse:0.68341	train-rmse:0.259002
+    [561]	eval-rmse:0.68341	train-rmse:0.259002
+    [562]	eval-rmse:0.68341	train-rmse:0.259002
+    [563]	eval-rmse:0.68341	train-rmse:0.259002
+    [564]	eval-rmse:0.68341	train-rmse:0.259002
+    [565]	eval-rmse:0.68341	train-rmse:0.259002
+    [566]	eval-rmse:0.68341	train-rmse:0.259002
+    [567]	eval-rmse:0.68341	train-rmse:0.259002
+    [568]	eval-rmse:0.68341	train-rmse:0.259002
+    [569]	eval-rmse:0.68341	train-rmse:0.259002
+    [570]	eval-rmse:0.68341	train-rmse:0.259002
+    [571]	eval-rmse:0.68341	train-rmse:0.259002
+    [572]	eval-rmse:0.68341	train-rmse:0.259002
+    [573]	eval-rmse:0.68341	train-rmse:0.259002
+    [574]	eval-rmse:0.68341	train-rmse:0.259002
+    [575]	eval-rmse:0.68341	train-rmse:0.259002
+    [576]	eval-rmse:0.68341	train-rmse:0.259002
+    [577]	eval-rmse:0.68341	train-rmse:0.259002
+    [578]	eval-rmse:0.68341	train-rmse:0.259002
+    [579]	eval-rmse:0.68341	train-rmse:0.259002
+    [580]	eval-rmse:0.68341	train-rmse:0.259002
+    [581]	eval-rmse:0.68341	train-rmse:0.259002
+    [582]	eval-rmse:0.68341	train-rmse:0.259002
+    [583]	eval-rmse:0.68341	train-rmse:0.259002
+    [584]	eval-rmse:0.68341	train-rmse:0.259002
+    [585]	eval-rmse:0.68341	train-rmse:0.259002
+    [586]	eval-rmse:0.68341	train-rmse:0.259002
+    [587]	eval-rmse:0.68341	train-rmse:0.259002
+    [588]	eval-rmse:0.68341	train-rmse:0.259002
+    [589]	eval-rmse:0.68341	train-rmse:0.259002
+    [590]	eval-rmse:0.68341	train-rmse:0.259002
+    [591]	eval-rmse:0.68341	train-rmse:0.259002
+    [592]	eval-rmse:0.68341	train-rmse:0.259002
+    [593]	eval-rmse:0.68341	train-rmse:0.259002
+    [594]	eval-rmse:0.68341	train-rmse:0.259002
+    [595]	eval-rmse:0.68341	train-rmse:0.259002
+    [596]	eval-rmse:0.68341	train-rmse:0.259002
+    [597]	eval-rmse:0.68341	train-rmse:0.259002
+    [598]	eval-rmse:0.68341	train-rmse:0.259002
+    [599]	eval-rmse:0.68341	train-rmse:0.259002
+    [600]	eval-rmse:0.68341	train-rmse:0.259002
+    [601]	eval-rmse:0.68341	train-rmse:0.259002
+    [602]	eval-rmse:0.68341	train-rmse:0.259002
+    [603]	eval-rmse:0.68341	train-rmse:0.259002
+    [604]	eval-rmse:0.68341	train-rmse:0.259002
+    [605]	eval-rmse:0.68341	train-rmse:0.259002
+    [606]	eval-rmse:0.68341	train-rmse:0.259002
+    [607]	eval-rmse:0.68341	train-rmse:0.259002
+    [608]	eval-rmse:0.68341	train-rmse:0.259002
+    [609]	eval-rmse:0.68341	train-rmse:0.259002
+    [610]	eval-rmse:0.68341	train-rmse:0.259002
+    [611]	eval-rmse:0.68341	train-rmse:0.259002
+    [612]	eval-rmse:0.68341	train-rmse:0.259002
+    [613]	eval-rmse:0.68341	train-rmse:0.259002
+    [614]	eval-rmse:0.68341	train-rmse:0.259002
+    [615]	eval-rmse:0.68341	train-rmse:0.259002
+    [616]	eval-rmse:0.68341	train-rmse:0.259002
+    [617]	eval-rmse:0.68341	train-rmse:0.259002
+    [618]	eval-rmse:0.68341	train-rmse:0.259002
+    [619]	eval-rmse:0.68341	train-rmse:0.259002
+    [620]	eval-rmse:0.68341	train-rmse:0.259002
+    [621]	eval-rmse:0.68341	train-rmse:0.259002
+    [622]	eval-rmse:0.68341	train-rmse:0.259002
+    [623]	eval-rmse:0.68341	train-rmse:0.259002
+    [624]	eval-rmse:0.68341	train-rmse:0.259002
+    [625]	eval-rmse:0.68341	train-rmse:0.259002
+    [626]	eval-rmse:0.68341	train-rmse:0.259002
+    [627]	eval-rmse:0.68341	train-rmse:0.259002
+    [628]	eval-rmse:0.68341	train-rmse:0.259002
+    [629]	eval-rmse:0.68341	train-rmse:0.259002
+    [630]	eval-rmse:0.68341	train-rmse:0.259002
+    [631]	eval-rmse:0.68341	train-rmse:0.259002
+    [632]	eval-rmse:0.68341	train-rmse:0.259002
+    [633]	eval-rmse:0.68341	train-rmse:0.259002
+    [634]	eval-rmse:0.68341	train-rmse:0.259002
+    [635]	eval-rmse:0.68341	train-rmse:0.259002
+    [636]	eval-rmse:0.68341	train-rmse:0.259002
+    [637]	eval-rmse:0.68341	train-rmse:0.259002
+    [638]	eval-rmse:0.68341	train-rmse:0.259002
+    [639]	eval-rmse:0.68341	train-rmse:0.259002
+    [640]	eval-rmse:0.68341	train-rmse:0.259002
+    [641]	eval-rmse:0.68341	train-rmse:0.259002
+    [642]	eval-rmse:0.68341	train-rmse:0.259002
+    [643]	eval-rmse:0.68341	train-rmse:0.259002
+    [644]	eval-rmse:0.68341	train-rmse:0.259002
+    [645]	eval-rmse:0.68341	train-rmse:0.259002
+    [646]	eval-rmse:0.68341	train-rmse:0.259002
+    [647]	eval-rmse:0.68341	train-rmse:0.259002
+    [648]	eval-rmse:0.68341	train-rmse:0.259002
+    [649]	eval-rmse:0.68341	train-rmse:0.259002
+    [650]	eval-rmse:0.68341	train-rmse:0.259002
+    [651]	eval-rmse:0.68341	train-rmse:0.259002
+    [652]	eval-rmse:0.68341	train-rmse:0.259002
+    [653]	eval-rmse:0.68341	train-rmse:0.259002
+    [654]	eval-rmse:0.68341	train-rmse:0.259002
+    [655]	eval-rmse:0.68341	train-rmse:0.259002
+    [656]	eval-rmse:0.68341	train-rmse:0.259002
+    [657]	eval-rmse:0.68341	train-rmse:0.259002
+    [658]	eval-rmse:0.68341	train-rmse:0.259002
+    [659]	eval-rmse:0.68341	train-rmse:0.259002
+    [660]	eval-rmse:0.68341	train-rmse:0.259002
+    [661]	eval-rmse:0.68341	train-rmse:0.259002
+    [662]	eval-rmse:0.68341	train-rmse:0.259002
+    [663]	eval-rmse:0.68341	train-rmse:0.259002
+    [664]	eval-rmse:0.68341	train-rmse:0.259002
+    [665]	eval-rmse:0.68341	train-rmse:0.259002
+    [666]	eval-rmse:0.68341	train-rmse:0.259002
+    [667]	eval-rmse:0.68341	train-rmse:0.259002
+    [668]	eval-rmse:0.68341	train-rmse:0.259002
+    [669]	eval-rmse:0.68341	train-rmse:0.259002
+    [670]	eval-rmse:0.68341	train-rmse:0.259002
+    [671]	eval-rmse:0.68341	train-rmse:0.259002
+    [672]	eval-rmse:0.68341	train-rmse:0.259002
+    [673]	eval-rmse:0.68341	train-rmse:0.259002
+    [674]	eval-rmse:0.68341	train-rmse:0.259002
+    [675]	eval-rmse:0.68341	train-rmse:0.259002
+    [676]	eval-rmse:0.68341	train-rmse:0.259002
+    [677]	eval-rmse:0.68341	train-rmse:0.259002
+    [678]	eval-rmse:0.68341	train-rmse:0.259002
+    [679]	eval-rmse:0.68341	train-rmse:0.259002
+    [680]	eval-rmse:0.68341	train-rmse:0.259002
+    [681]	eval-rmse:0.68341	train-rmse:0.259002
+    [682]	eval-rmse:0.68341	train-rmse:0.259002
+    [683]	eval-rmse:0.68341	train-rmse:0.259002
+    [684]	eval-rmse:0.68341	train-rmse:0.259002
+    [685]	eval-rmse:0.68341	train-rmse:0.259002
+    [686]	eval-rmse:0.68341	train-rmse:0.259002
+    [687]	eval-rmse:0.68341	train-rmse:0.259002
+    [688]	eval-rmse:0.68341	train-rmse:0.259002
+    [689]	eval-rmse:0.68341	train-rmse:0.259002
+    [690]	eval-rmse:0.68341	train-rmse:0.259002
+    [691]	eval-rmse:0.68341	train-rmse:0.259002
+    [692]	eval-rmse:0.68341	train-rmse:0.259002
+    [693]	eval-rmse:0.68341	train-rmse:0.259002
+    [694]	eval-rmse:0.68341	train-rmse:0.259002
+    [695]	eval-rmse:0.68341	train-rmse:0.259002
+    [696]	eval-rmse:0.68341	train-rmse:0.259002
+    [697]	eval-rmse:0.68341	train-rmse:0.259002
+    [698]	eval-rmse:0.68341	train-rmse:0.259002
+    [699]	eval-rmse:0.68341	train-rmse:0.259002
+    [700]	eval-rmse:0.68341	train-rmse:0.259002
+    [701]	eval-rmse:0.68341	train-rmse:0.259002
+    [702]	eval-rmse:0.68341	train-rmse:0.259002
+    [703]	eval-rmse:0.68341	train-rmse:0.259002
+    [704]	eval-rmse:0.68341	train-rmse:0.259002
+    [705]	eval-rmse:0.68341	train-rmse:0.259002
+    [706]	eval-rmse:0.68341	train-rmse:0.259002
+    [707]	eval-rmse:0.68341	train-rmse:0.259002
+    [708]	eval-rmse:0.68341	train-rmse:0.259002
+    [709]	eval-rmse:0.68341	train-rmse:0.259002
+    [710]	eval-rmse:0.68341	train-rmse:0.259002
+    [711]	eval-rmse:0.68341	train-rmse:0.259002
+    [712]	eval-rmse:0.68341	train-rmse:0.259002
+    [713]	eval-rmse:0.68341	train-rmse:0.259002
+    [714]	eval-rmse:0.68341	train-rmse:0.259002
+    [715]	eval-rmse:0.68341	train-rmse:0.259002
+    [716]	eval-rmse:0.68341	train-rmse:0.259002
+    [717]	eval-rmse:0.68341	train-rmse:0.259002
+    [718]	eval-rmse:0.68341	train-rmse:0.259002
+    [719]	eval-rmse:0.68341	train-rmse:0.259002
+    [720]	eval-rmse:0.68341	train-rmse:0.259002
+    [721]	eval-rmse:0.68341	train-rmse:0.259002
+    [722]	eval-rmse:0.68341	train-rmse:0.259002
+    [723]	eval-rmse:0.68341	train-rmse:0.259002
+    [724]	eval-rmse:0.68341	train-rmse:0.259002
+    [725]	eval-rmse:0.68341	train-rmse:0.259002
+    [726]	eval-rmse:0.68341	train-rmse:0.259002
+    [727]	eval-rmse:0.68341	train-rmse:0.259002
+    [728]	eval-rmse:0.68341	train-rmse:0.259002
+    [729]	eval-rmse:0.68341	train-rmse:0.259002
+    [730]	eval-rmse:0.68341	train-rmse:0.259002
+    [731]	eval-rmse:0.68341	train-rmse:0.259002
+    [732]	eval-rmse:0.68341	train-rmse:0.259002
+    [733]	eval-rmse:0.68341	train-rmse:0.259002
+    [734]	eval-rmse:0.68341	train-rmse:0.259002
+    [735]	eval-rmse:0.68341	train-rmse:0.259002
+    [736]	eval-rmse:0.68341	train-rmse:0.259002
+    [737]	eval-rmse:0.68341	train-rmse:0.259002
+    [738]	eval-rmse:0.68341	train-rmse:0.259002
+    [739]	eval-rmse:0.68341	train-rmse:0.259002
+    [740]	eval-rmse:0.68341	train-rmse:0.259002
+    [741]	eval-rmse:0.68341	train-rmse:0.259002
+    [742]	eval-rmse:0.68341	train-rmse:0.259002
+    [743]	eval-rmse:0.68341	train-rmse:0.259002
+    [744]	eval-rmse:0.68341	train-rmse:0.259002
+    [745]	eval-rmse:0.68341	train-rmse:0.259002
+    [746]	eval-rmse:0.68341	train-rmse:0.259002
+    [747]	eval-rmse:0.68341	train-rmse:0.259002
+    [748]	eval-rmse:0.68341	train-rmse:0.259002
+    [749]	eval-rmse:0.68341	train-rmse:0.259002
+    [750]	eval-rmse:0.68341	train-rmse:0.259002
+    [751]	eval-rmse:0.68341	train-rmse:0.259002
+    [752]	eval-rmse:0.68341	train-rmse:0.259002
+    [753]	eval-rmse:0.68341	train-rmse:0.259002
+    [754]	eval-rmse:0.68341	train-rmse:0.259002
+    [755]	eval-rmse:0.68341	train-rmse:0.259002
+    [756]	eval-rmse:0.68341	train-rmse:0.259002
+    [757]	eval-rmse:0.68341	train-rmse:0.259002
+    [758]	eval-rmse:0.68341	train-rmse:0.259002
+    [759]	eval-rmse:0.68341	train-rmse:0.259002
+    [760]	eval-rmse:0.68341	train-rmse:0.259002
+    [761]	eval-rmse:0.68341	train-rmse:0.259002
+    [762]	eval-rmse:0.68341	train-rmse:0.259002
+    [763]	eval-rmse:0.68341	train-rmse:0.259002
+    [764]	eval-rmse:0.68341	train-rmse:0.259002
+    [765]	eval-rmse:0.68341	train-rmse:0.259002
+    [766]	eval-rmse:0.68341	train-rmse:0.259002
+    [767]	eval-rmse:0.68341	train-rmse:0.259002
+    [768]	eval-rmse:0.68341	train-rmse:0.259002
+    [769]	eval-rmse:0.68341	train-rmse:0.259002
+    [770]	eval-rmse:0.68341	train-rmse:0.259002
+    [771]	eval-rmse:0.68341	train-rmse:0.259002
+    [772]	eval-rmse:0.68341	train-rmse:0.259002
+    [773]	eval-rmse:0.68341	train-rmse:0.259002
+    [774]	eval-rmse:0.68341	train-rmse:0.259002
+    [775]	eval-rmse:0.68341	train-rmse:0.259002
+    [776]	eval-rmse:0.68341	train-rmse:0.259002
+    [777]	eval-rmse:0.68341	train-rmse:0.259002
+    [778]	eval-rmse:0.68341	train-rmse:0.259002
+    [779]	eval-rmse:0.68341	train-rmse:0.259002
+    [780]	eval-rmse:0.68341	train-rmse:0.259002
+    [781]	eval-rmse:0.68341	train-rmse:0.259002
+    [782]	eval-rmse:0.68341	train-rmse:0.259002
+    [783]	eval-rmse:0.68341	train-rmse:0.259002
+    [784]	eval-rmse:0.68341	train-rmse:0.259002
+    [785]	eval-rmse:0.68341	train-rmse:0.259002
+    [786]	eval-rmse:0.68341	train-rmse:0.259002
+    [787]	eval-rmse:0.68341	train-rmse:0.259002
+    [788]	eval-rmse:0.68341	train-rmse:0.259002
+    [789]	eval-rmse:0.68341	train-rmse:0.259002
+    [790]	eval-rmse:0.68341	train-rmse:0.259002
+    [791]	eval-rmse:0.68341	train-rmse:0.259002
+    [792]	eval-rmse:0.68341	train-rmse:0.259002
+    [793]	eval-rmse:0.68341	train-rmse:0.259002
+    [794]	eval-rmse:0.68341	train-rmse:0.259002
+    [795]	eval-rmse:0.68341	train-rmse:0.259002
+    [796]	eval-rmse:0.68341	train-rmse:0.259002
+    [797]	eval-rmse:0.68341	train-rmse:0.259002
+    [798]	eval-rmse:0.68341	train-rmse:0.259002
+    [799]	eval-rmse:0.68341	train-rmse:0.259002
+    [800]	eval-rmse:0.68341	train-rmse:0.259002
+    [801]	eval-rmse:0.68341	train-rmse:0.259002
+    [802]	eval-rmse:0.68341	train-rmse:0.259002
+    [803]	eval-rmse:0.68341	train-rmse:0.259002
+    [804]	eval-rmse:0.68341	train-rmse:0.259002
+    [805]	eval-rmse:0.68341	train-rmse:0.259002
+    [806]	eval-rmse:0.68341	train-rmse:0.259002
+    [807]	eval-rmse:0.68341	train-rmse:0.259002
+    [808]	eval-rmse:0.68341	train-rmse:0.259002
+    [809]	eval-rmse:0.68341	train-rmse:0.259002
+    [810]	eval-rmse:0.68341	train-rmse:0.259002
+    [811]	eval-rmse:0.68341	train-rmse:0.259002
+    [812]	eval-rmse:0.68341	train-rmse:0.259002
+    [813]	eval-rmse:0.68341	train-rmse:0.259002
+    [814]	eval-rmse:0.68341	train-rmse:0.259002
+    [815]	eval-rmse:0.68341	train-rmse:0.259002
+    [816]	eval-rmse:0.68341	train-rmse:0.259002
+    [817]	eval-rmse:0.68341	train-rmse:0.259002
+    [818]	eval-rmse:0.68341	train-rmse:0.259002
+    [819]	eval-rmse:0.68341	train-rmse:0.259002
+    [820]	eval-rmse:0.68341	train-rmse:0.259002
+    [821]	eval-rmse:0.68341	train-rmse:0.259002
+    [822]	eval-rmse:0.68341	train-rmse:0.259002
+    [823]	eval-rmse:0.68341	train-rmse:0.259002
+    [824]	eval-rmse:0.68341	train-rmse:0.259002
+    [825]	eval-rmse:0.68341	train-rmse:0.259002
+    [826]	eval-rmse:0.68341	train-rmse:0.259002
+    [827]	eval-rmse:0.68341	train-rmse:0.259002
+    [828]	eval-rmse:0.68341	train-rmse:0.259002
+    [829]	eval-rmse:0.68341	train-rmse:0.259002
+    [830]	eval-rmse:0.68341	train-rmse:0.259002
+    [831]	eval-rmse:0.68341	train-rmse:0.259002
+    [832]	eval-rmse:0.68341	train-rmse:0.259002
+    [833]	eval-rmse:0.68341	train-rmse:0.259002
+    [834]	eval-rmse:0.68341	train-rmse:0.259002
+    [835]	eval-rmse:0.68341	train-rmse:0.259002
+    [836]	eval-rmse:0.68341	train-rmse:0.259002
+    [837]	eval-rmse:0.68341	train-rmse:0.259002
+    [838]	eval-rmse:0.68341	train-rmse:0.259002
+    [839]	eval-rmse:0.68341	train-rmse:0.259002
+    [840]	eval-rmse:0.68341	train-rmse:0.259002
+    [841]	eval-rmse:0.68341	train-rmse:0.259002
+    [842]	eval-rmse:0.68341	train-rmse:0.259002
+    [843]	eval-rmse:0.68341	train-rmse:0.259002
+    [844]	eval-rmse:0.68341	train-rmse:0.259002
+    [845]	eval-rmse:0.68341	train-rmse:0.259002
+    [846]	eval-rmse:0.68341	train-rmse:0.259002
+    [847]	eval-rmse:0.68341	train-rmse:0.259002
+    [848]	eval-rmse:0.68341	train-rmse:0.259002
+    [849]	eval-rmse:0.68341	train-rmse:0.259002
+    [850]	eval-rmse:0.68341	train-rmse:0.259002
+    [851]	eval-rmse:0.68341	train-rmse:0.259002
+    [852]	eval-rmse:0.68341	train-rmse:0.259002
+    [853]	eval-rmse:0.68341	train-rmse:0.259002
+    [854]	eval-rmse:0.68341	train-rmse:0.259002
+    [855]	eval-rmse:0.68341	train-rmse:0.259002
+    [856]	eval-rmse:0.68341	train-rmse:0.259002
+    [857]	eval-rmse:0.68341	train-rmse:0.259002
+    [858]	eval-rmse:0.68341	train-rmse:0.259002
+    [859]	eval-rmse:0.68341	train-rmse:0.259002
+    [860]	eval-rmse:0.68341	train-rmse:0.259002
+    [861]	eval-rmse:0.68341	train-rmse:0.259002
+    [862]	eval-rmse:0.68341	train-rmse:0.259002
+    [863]	eval-rmse:0.68341	train-rmse:0.259002
+    [864]	eval-rmse:0.68341	train-rmse:0.259002
+    [865]	eval-rmse:0.68341	train-rmse:0.259002
+    [866]	eval-rmse:0.68341	train-rmse:0.259002
+    [867]	eval-rmse:0.68341	train-rmse:0.259002
+    [868]	eval-rmse:0.68341	train-rmse:0.259002
+    [869]	eval-rmse:0.68341	train-rmse:0.259002
+    [870]	eval-rmse:0.68341	train-rmse:0.259002
+    [871]	eval-rmse:0.68341	train-rmse:0.259002
+    [872]	eval-rmse:0.68341	train-rmse:0.259002
+    [873]	eval-rmse:0.68341	train-rmse:0.259002
+    [874]	eval-rmse:0.68341	train-rmse:0.259002
+    [875]	eval-rmse:0.68341	train-rmse:0.259002
+    [876]	eval-rmse:0.68341	train-rmse:0.259002
+    [877]	eval-rmse:0.68341	train-rmse:0.259002
+    [878]	eval-rmse:0.68341	train-rmse:0.259002
+    [879]	eval-rmse:0.68341	train-rmse:0.259002
+    [880]	eval-rmse:0.68341	train-rmse:0.259002
+    [881]	eval-rmse:0.68341	train-rmse:0.259002
+    [882]	eval-rmse:0.68341	train-rmse:0.259002
+    [883]	eval-rmse:0.68341	train-rmse:0.259002
+    [884]	eval-rmse:0.68341	train-rmse:0.259002
+    [885]	eval-rmse:0.68341	train-rmse:0.259002
+    [886]	eval-rmse:0.68341	train-rmse:0.259002
+    [887]	eval-rmse:0.68341	train-rmse:0.259002
+    [888]	eval-rmse:0.68341	train-rmse:0.259002
+    [889]	eval-rmse:0.68341	train-rmse:0.259002
+    [890]	eval-rmse:0.68341	train-rmse:0.259002
+    [891]	eval-rmse:0.68341	train-rmse:0.259002
+    [892]	eval-rmse:0.68341	train-rmse:0.259002
+    [893]	eval-rmse:0.68341	train-rmse:0.259002
+    [894]	eval-rmse:0.68341	train-rmse:0.259002
+    [895]	eval-rmse:0.68341	train-rmse:0.259002
+    [896]	eval-rmse:0.68341	train-rmse:0.259002
+    [897]	eval-rmse:0.68341	train-rmse:0.259002
+    [898]	eval-rmse:0.68341	train-rmse:0.259002
+    [899]	eval-rmse:0.68341	train-rmse:0.259002
+    [900]	eval-rmse:0.68341	train-rmse:0.259002
+    [901]	eval-rmse:0.68341	train-rmse:0.259002
+    [902]	eval-rmse:0.68341	train-rmse:0.259002
+    [903]	eval-rmse:0.68341	train-rmse:0.259002
+    [904]	eval-rmse:0.68341	train-rmse:0.259002
+    [905]	eval-rmse:0.68341	train-rmse:0.259002
+    [906]	eval-rmse:0.68341	train-rmse:0.259002
+    [907]	eval-rmse:0.68341	train-rmse:0.259002
+    [908]	eval-rmse:0.68341	train-rmse:0.259002
+    [909]	eval-rmse:0.68341	train-rmse:0.259002
+    [910]	eval-rmse:0.68341	train-rmse:0.259002
+    [911]	eval-rmse:0.68341	train-rmse:0.259002
+    [912]	eval-rmse:0.68341	train-rmse:0.259002
+    [913]	eval-rmse:0.68341	train-rmse:0.259002
+    [914]	eval-rmse:0.68341	train-rmse:0.259002
+    [915]	eval-rmse:0.68341	train-rmse:0.259002
+    [916]	eval-rmse:0.68341	train-rmse:0.259002
+    [917]	eval-rmse:0.68341	train-rmse:0.259002
+    [918]	eval-rmse:0.68341	train-rmse:0.259002
+    [919]	eval-rmse:0.68341	train-rmse:0.259002
+    [920]	eval-rmse:0.68341	train-rmse:0.259002
+    [921]	eval-rmse:0.68341	train-rmse:0.259002
+    [922]	eval-rmse:0.68341	train-rmse:0.259002
+    [923]	eval-rmse:0.68341	train-rmse:0.259002
+    [924]	eval-rmse:0.68341	train-rmse:0.259002
+    [925]	eval-rmse:0.68341	train-rmse:0.259002
+    [926]	eval-rmse:0.68341	train-rmse:0.259002
+    [927]	eval-rmse:0.68341	train-rmse:0.259002
+    [928]	eval-rmse:0.68341	train-rmse:0.259002
+    [929]	eval-rmse:0.68341	train-rmse:0.259002
+    [930]	eval-rmse:0.68341	train-rmse:0.259002
+    [931]	eval-rmse:0.68341	train-rmse:0.259002
+    [932]	eval-rmse:0.68341	train-rmse:0.259002
+    [933]	eval-rmse:0.68341	train-rmse:0.259002
+    [934]	eval-rmse:0.68341	train-rmse:0.259002
+    [935]	eval-rmse:0.68341	train-rmse:0.259002
+    [936]	eval-rmse:0.68341	train-rmse:0.259002
+    [937]	eval-rmse:0.68341	train-rmse:0.259002
+    [938]	eval-rmse:0.68341	train-rmse:0.259002
+    [939]	eval-rmse:0.68341	train-rmse:0.259002
+    [940]	eval-rmse:0.68341	train-rmse:0.259002
+    [941]	eval-rmse:0.68341	train-rmse:0.259002
+    [942]	eval-rmse:0.68341	train-rmse:0.259002
+    [943]	eval-rmse:0.68341	train-rmse:0.259002
+    [944]	eval-rmse:0.68341	train-rmse:0.259002
+    [945]	eval-rmse:0.68341	train-rmse:0.259002
+    [946]	eval-rmse:0.68341	train-rmse:0.259002
+    [947]	eval-rmse:0.68341	train-rmse:0.259002
+    [948]	eval-rmse:0.68341	train-rmse:0.259002
+    [949]	eval-rmse:0.68341	train-rmse:0.259002
+    [950]	eval-rmse:0.68341	train-rmse:0.259002
+    [951]	eval-rmse:0.68341	train-rmse:0.259002
+    [952]	eval-rmse:0.68341	train-rmse:0.259002
+    [953]	eval-rmse:0.68341	train-rmse:0.259002
+    [954]	eval-rmse:0.68341	train-rmse:0.259002
+    [955]	eval-rmse:0.68341	train-rmse:0.259002
+    [956]	eval-rmse:0.68341	train-rmse:0.259002
+    [957]	eval-rmse:0.68341	train-rmse:0.259002
+    [958]	eval-rmse:0.68341	train-rmse:0.259002
+    [959]	eval-rmse:0.68341	train-rmse:0.259002
+    [960]	eval-rmse:0.68341	train-rmse:0.259002
+    [961]	eval-rmse:0.68341	train-rmse:0.259002
+    [962]	eval-rmse:0.68341	train-rmse:0.259002
+    [963]	eval-rmse:0.68341	train-rmse:0.259002
+    [964]	eval-rmse:0.68341	train-rmse:0.259002
+    [965]	eval-rmse:0.68341	train-rmse:0.259002
+    [966]	eval-rmse:0.68341	train-rmse:0.259002
+    [967]	eval-rmse:0.68341	train-rmse:0.259002
+    [968]	eval-rmse:0.68341	train-rmse:0.259002
+    [969]	eval-rmse:0.68341	train-rmse:0.259002
+    [970]	eval-rmse:0.68341	train-rmse:0.259002
+    [971]	eval-rmse:0.68341	train-rmse:0.259002
+    [972]	eval-rmse:0.68341	train-rmse:0.259002
+    [973]	eval-rmse:0.68341	train-rmse:0.259002
+    [974]	eval-rmse:0.68341	train-rmse:0.259002
+    [975]	eval-rmse:0.68341	train-rmse:0.259002
+    [976]	eval-rmse:0.68341	train-rmse:0.259002
+    [977]	eval-rmse:0.68341	train-rmse:0.259002
+    [978]	eval-rmse:0.68341	train-rmse:0.259002
+    [979]	eval-rmse:0.68341	train-rmse:0.259002
+    [980]	eval-rmse:0.68341	train-rmse:0.259002
+    [981]	eval-rmse:0.68341	train-rmse:0.259002
+    [982]	eval-rmse:0.68341	train-rmse:0.259002
+    [983]	eval-rmse:0.68341	train-rmse:0.259002
+    [984]	eval-rmse:0.68341	train-rmse:0.259002
+    [985]	eval-rmse:0.68341	train-rmse:0.259002
+    [986]	eval-rmse:0.68341	train-rmse:0.259002
+    [987]	eval-rmse:0.68341	train-rmse:0.259002
+    [988]	eval-rmse:0.68341	train-rmse:0.259002
+    [989]	eval-rmse:0.68341	train-rmse:0.259002
+    [990]	eval-rmse:0.68341	train-rmse:0.259002
+    [991]	eval-rmse:0.68341	train-rmse:0.259002
+    [992]	eval-rmse:0.68341	train-rmse:0.259002
+    [993]	eval-rmse:0.68341	train-rmse:0.259002
+    [994]	eval-rmse:0.68341	train-rmse:0.259002
+    [995]	eval-rmse:0.68341	train-rmse:0.259002
+    [996]	eval-rmse:0.68341	train-rmse:0.259002
+    [997]	eval-rmse:0.68341	train-rmse:0.259002
+    [998]	eval-rmse:0.68341	train-rmse:0.259002
+    [999]	eval-rmse:0.68341	train-rmse:0.259002
     
 
 
 ```python
-plt.subplot(1,2,1)
-preds = bst.predict(xgtest)
 
-plt.plot(preds, (preds-y_test), '.')
-plt.subplot(1,2,2)
-plt.plot(preds, y_test, '.')
 ```
 
 
+![png](output_9_0.png)
 
-
-    [<matplotlib.lines.Line2D at 0x226019d0860>]
-
-
-
-
-![png](output_17_1.png)
-
-
-
-```python
-make_plot(df.sample(frac=1), features=['median_gross_rent'])
-```
-
-
-![png](output_18_0.png)
-
-
-
-```python
-import chardet
-with open('CollegeCity.csv', 'rb') as f:
-    result = chardet.detect(f.read())  # or readline if the file is large
-print(result['encoding'])
-```
-
-    ISO-8859-1
-    
-
-
-```python
-us_state_abbrev = {
-    'Alabama': 'AL',
-    'Alaska': 'AK',
-    'Arizona': 'AZ',
-    'Arkansas': 'AR',
-    'California': 'CA',
-    'Colorado': 'CO',
-    'Connecticut': 'CT',
-    'Delaware': 'DE',
-    'Florida': 'FL',
-    'Georgia': 'GA',
-    'Hawaii': 'HI',
-    'Idaho': 'ID',
-    'Illinois': 'IL',
-    'Indiana': 'IN',
-    'Iowa': 'IA',
-    'Kansas': 'KS',
-    'Kentucky': 'KY',
-    'Louisiana': 'LA',
-    'Maine': 'ME',
-    'Maryland': 'MD',
-    'Massachusetts': 'MA',
-    'Michigan': 'MI',
-    'Minnesota': 'MN',
-    'Mississippi': 'MS',
-    'Missouri': 'MO',
-    'Montana': 'MT',
-    'Nebraska': 'NE',
-    'Nevada': 'NV',
-    'New Hampshire': 'NH',
-    'New Jersey': 'NJ',
-    'New Mexico': 'NM',
-    'New York': 'NY',
-    'North Carolina': 'NC',
-    'North Dakota': 'ND',
-    'Ohio': 'OH',
-    'Oklahoma': 'OK',
-    'Oregon': 'OR',
-    'Pennsylvania': 'PA',
-    'Rhode Island': 'RI',
-    'South Carolina': 'SC',
-    'South Dakota': 'SD',
-    'Tennessee': 'TN',
-    'Texas': 'TX',
-    'Utah': 'UT',
-    'Vermont': 'VT',
-    'Virginia': 'VA',
-    'Washington': 'WA',
-    'West Virginia': 'WV',
-    'Wisconsin': 'WI',
-    'Wyoming': 'WY',
-}
-df['State short'] = df['parent_location'].map(us_state_abbrev)
-```
 
 
 ```python
@@ -911,16 +1278,6 @@ dfCollegeCounty = pd.merge(dfCollege, dfCounty, how='left', on=['City', 'State s
 dfCollegeCounty.drop_duplicates(subset=['UNITID'], inplace = True)
 dfCollegeCount = dfCollegeCounty.groupby(['County','State short'])['EFYTOTLT'].agg(['count','sum']).reset_index()
 dfCollegeCount.rename(index=str, columns={"count": "number_of_colleges", "sum": "students_total_enrollments"}, inplace = True)
-```
-
-
-```python
-#dfCounty.loc[dfCounty['County'] =='ADAMS']
-```
-
-
-```python
-#fCollegeCounty.loc[dfCollegeCounty['County'] =='ADAMS']
 ```
 
 
@@ -1392,695 +1749,8 @@ dfCollegeCount
 
 
 ```python
-dfCounty.iloc[0]
-```
-
-
-
-
-    City           Holtsville
-    State short            NY
-    State full       New York
-    County            SUFFOLK
-    Name: 0, dtype: object
-
-
-
-
-```python
-df['County'], df['type'] = df['name'].str.split(' ', 1).str
-df['County'] = df['County'].str.upper()
-df.iloc[0]
-```
-
-
-
-
-    GEOID                                   1001
-    year                                    2000
-    name                          Autauga County
-    parent_location                      Alabama
-    population                             43671
-    poverty_rate                           10.92
-    pct_renter_occupied                    19.21
-    median_gross_rent                        537
-    median_household_income                42013
-    median_property_value                  94800
-    rent_burden                             22.6
-    pct_white                              79.74
-    pct_af_am                              17.01
-    pct_hispanic                             1.4
-    pct_am_ind                              0.43
-    pct_asian                               0.44
-    pct_nh_pi                               0.03
-    pct_multiple                            0.86
-    pct_other                                0.1
-    renter_occupied_households              3074
-    eviction_filings                          61
-    evictions                                 40
-    eviction_rate                            1.3
-    eviction_filing_rate                    1.98
-    imputed                                    0
-    subbed                                     0
-    State short                               AL
-    County                               AUTAUGA
-    type                                  County
-    Name: 0, dtype: object
-
-
-
-
-```python
 df_withCollege = pd.merge(df, dfCollegeCount, how = 'left', on =['County', 'State short'])
 ```
-
-
-```python
-df.columns
-```
-
-
-
-
-    Index(['GEOID', 'year', 'name', 'parent_location', 'population',
-           'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
-           'median_household_income', 'median_property_value', 'rent_burden',
-           'pct_white', 'pct_af_am', 'pct_hispanic', 'pct_am_ind', 'pct_asian',
-           'pct_nh_pi', 'pct_multiple', 'pct_other', 'renter_occupied_households',
-           'eviction_filings', 'evictions', 'eviction_rate',
-           'eviction_filing_rate', 'imputed', 'subbed', 'State short', 'County',
-           'type'],
-          dtype='object')
-
-
-
-
-```python
-###df_withCollege['has_college'] = 1 - df_withCollege.INSTNM.isnull()
-df_withCollege.columns
-```
-
-
-
-
-    Index(['GEOID', 'year', 'name', 'parent_location', 'population',
-           'poverty_rate', 'pct_renter_occupied', 'median_gross_rent',
-           'median_household_income', 'median_property_value', 'rent_burden',
-           'pct_white', 'pct_af_am', 'pct_hispanic', 'pct_am_ind', 'pct_asian',
-           'pct_nh_pi', 'pct_multiple', 'pct_other', 'renter_occupied_households',
-           'eviction_filings', 'evictions', 'eviction_rate',
-           'eviction_filing_rate', 'imputed', 'subbed', 'State short', 'County',
-           'type', 'number_of_colleges', 'students_total_enrollments'],
-          dtype='object')
-
-
-
-
-```python
-plt.plot(df_withCollege['students_total_enrollments'], df_withCollege['eviction_rate'],'.')
-plt.xlim([0,150000])
-```
-
-
-
-
-    (0, 150000)
-
-
-
-
-![png](output_31_1.png)
-
-
-
-```python
-dfEducation = pd.read_excel('Education.xls')
-dfUnemployment = pd.read_excel('Unemployment.xls')
-#dfEducation.head()
-```
-
-
-```python
-dfEducation.columns = dfEducation.columns.str.replace("-", "_")
-dfEducation.columns = dfEducation.columns.str.replace("'", "")
-dfEducation.columns = dfEducation.columns.str.replace(",", "")
-dfEducation['County'], dfEducation['AreaType'] = dfEducation['Area name'].str.split(' ', 1).str
-dfEducation['County'] = dfEducation['County'].str.upper()
-
-dfEducation.columns
-dfEducation.head()
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FIPS Code</th>
-      <th>State</th>
-      <th>Area name</th>
-      <th>2003 Rural_urban Continuum Code</th>
-      <th>2003 Urban Influence Code</th>
-      <th>2013 Rural_urban Continuum Code</th>
-      <th>2013 Urban Influence Code</th>
-      <th>Less than a high school diploma 1970</th>
-      <th>High school diploma only 1970</th>
-      <th>Some college (1_3 years) 1970</th>
-      <th>...</th>
-      <th>Less than a high school diploma 2012_2016</th>
-      <th>High school diploma only 2012_2016</th>
-      <th>Some college or associates degree 2012_2016</th>
-      <th>Bachelors degree or higher 2012_2016</th>
-      <th>Percent of adults with less than a high school diploma 2012_2016</th>
-      <th>Percent of adults with a high school diploma only 2012_2016</th>
-      <th>Percent of adults completing some college or associates degree 2012_2016</th>
-      <th>Percent of adults with a bachelors degree or higher 2012_2016</th>
-      <th>County</th>
-      <th>AreaType</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>0</td>
-      <td>US</td>
-      <td>United States</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>52373312.0</td>
-      <td>34158051.0</td>
-      <td>11650730.0</td>
-      <td>...</td>
-      <td>27818380.0</td>
-      <td>58820411.0</td>
-      <td>62242569.0</td>
-      <td>64767787.0</td>
-      <td>13.021</td>
-      <td>27.531</td>
-      <td>29.133</td>
-      <td>30.315</td>
-      <td>UNITED</td>
-      <td>States</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1000</td>
-      <td>AL</td>
-      <td>Alabama</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>1062306.0</td>
-      <td>468269.0</td>
-      <td>136287.0</td>
-      <td>...</td>
-      <td>496036.0</td>
-      <td>1009593.0</td>
-      <td>972703.0</td>
-      <td>783076.0</td>
-      <td>15.209</td>
-      <td>30.956</td>
-      <td>29.825</td>
-      <td>24.010</td>
-      <td>ALABAMA</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1001</td>
-      <td>AL</td>
-      <td>Autauga County</td>
-      <td>2.0</td>
-      <td>2.0</td>
-      <td>2.0</td>
-      <td>2.0</td>
-      <td>6611.0</td>
-      <td>3757.0</td>
-      <td>933.0</td>
-      <td>...</td>
-      <td>4528.0</td>
-      <td>12519.0</td>
-      <td>10451.0</td>
-      <td>8968.0</td>
-      <td>12.417</td>
-      <td>34.331</td>
-      <td>28.660</td>
-      <td>24.593</td>
-      <td>AUTAUGA</td>
-      <td>County</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1003</td>
-      <td>AL</td>
-      <td>Baldwin County</td>
-      <td>4.0</td>
-      <td>5.0</td>
-      <td>3.0</td>
-      <td>2.0</td>
-      <td>18726.0</td>
-      <td>8426.0</td>
-      <td>2334.0</td>
-      <td>...</td>
-      <td>13956.0</td>
-      <td>40154.0</td>
-      <td>44486.0</td>
-      <td>41350.0</td>
-      <td>9.972</td>
-      <td>28.692</td>
-      <td>31.788</td>
-      <td>29.547</td>
-      <td>BALDWIN</td>
-      <td>County</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1005</td>
-      <td>AL</td>
-      <td>Barbour County</td>
-      <td>6.0</td>
-      <td>6.0</td>
-      <td>6.0</td>
-      <td>6.0</td>
-      <td>8120.0</td>
-      <td>2242.0</td>
-      <td>581.0</td>
-      <td>...</td>
-      <td>4824.0</td>
-      <td>6422.0</td>
-      <td>4775.0</td>
-      <td>2366.0</td>
-      <td>26.236</td>
-      <td>34.927</td>
-      <td>25.969</td>
-      <td>12.868</td>
-      <td>BARBOUR</td>
-      <td>County</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 49 columns</p>
-</div>
-
-
-
-
-```python
-dfEducation.shape
-```
-
-
-
-
-    (3283, 49)
-
-
-
-
-```python
-dfUnemployment['County'], dfUnemployment['AreaType'] = dfUnemployment['Area_name'].str.split(' ', 1).str
-dfUnemployment['County'] = dfUnemployment['County'].str.upper()
-
-dfUnemployment.head()
-
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>FIPStxt</th>
-      <th>State</th>
-      <th>Area_name</th>
-      <th>Rural_urban_continuum_code_2013</th>
-      <th>Urban_influence_code_2013</th>
-      <th>Metro_2013</th>
-      <th>Civilian_labor_force_2007</th>
-      <th>Employed_2007</th>
-      <th>Unemployed_2007</th>
-      <th>Unemployment_rate_2007</th>
-      <th>...</th>
-      <th>Unemployed_2015</th>
-      <th>Unemployment_rate_2015</th>
-      <th>Civilian_labor_force_2016</th>
-      <th>Employed_2016</th>
-      <th>Unemployed_2016</th>
-      <th>Unemployment_rate_2016</th>
-      <th>Median_Household_Income_2016</th>
-      <th>Med_HH_Income_Percent_of_State_Total_2016</th>
-      <th>County</th>
-      <th>AreaType</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1000</td>
-      <td>AL</td>
-      <td>Alabama</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>2175612.0</td>
-      <td>2089127.0</td>
-      <td>86485.0</td>
-      <td>4.0</td>
-      <td>...</td>
-      <td>131614.0</td>
-      <td>6.1</td>
-      <td>2168608.0</td>
-      <td>2038775.0</td>
-      <td>129833.0</td>
-      <td>6.0</td>
-      <td>46309.0</td>
-      <td>100.0</td>
-      <td>ALABAMA</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1001</td>
-      <td>AL</td>
-      <td>Autauga County, AL</td>
-      <td>2.0</td>
-      <td>2.0</td>
-      <td>1.0</td>
-      <td>24383.0</td>
-      <td>23577.0</td>
-      <td>806.0</td>
-      <td>3.3</td>
-      <td>...</td>
-      <td>1332.0</td>
-      <td>5.3</td>
-      <td>25649.0</td>
-      <td>24297.0</td>
-      <td>1352.0</td>
-      <td>5.3</td>
-      <td>54487.0</td>
-      <td>117.7</td>
-      <td>AUTAUGA</td>
-      <td>County, AL</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1003</td>
-      <td>AL</td>
-      <td>Baldwin County, AL</td>
-      <td>3.0</td>
-      <td>2.0</td>
-      <td>1.0</td>
-      <td>82659.0</td>
-      <td>80099.0</td>
-      <td>2560.0</td>
-      <td>3.1</td>
-      <td>...</td>
-      <td>4874.0</td>
-      <td>5.6</td>
-      <td>89931.0</td>
-      <td>85061.0</td>
-      <td>4870.0</td>
-      <td>5.4</td>
-      <td>56460.0</td>
-      <td>121.9</td>
-      <td>BALDWIN</td>
-      <td>County, AL</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1005</td>
-      <td>AL</td>
-      <td>Barbour County, AL</td>
-      <td>6.0</td>
-      <td>6.0</td>
-      <td>0.0</td>
-      <td>10334.0</td>
-      <td>9684.0</td>
-      <td>650.0</td>
-      <td>6.3</td>
-      <td>...</td>
-      <td>765.0</td>
-      <td>8.8</td>
-      <td>8302.0</td>
-      <td>7584.0</td>
-      <td>718.0</td>
-      <td>8.6</td>
-      <td>32884.0</td>
-      <td>71.0</td>
-      <td>BARBOUR</td>
-      <td>County, AL</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1007</td>
-      <td>AL</td>
-      <td>Bibb County, AL</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>8791.0</td>
-      <td>8432.0</td>
-      <td>359.0</td>
-      <td>4.1</td>
-      <td>...</td>
-      <td>569.0</td>
-      <td>6.7</td>
-      <td>8573.0</td>
-      <td>8004.0</td>
-      <td>569.0</td>
-      <td>6.6</td>
-      <td>43079.0</td>
-      <td>93.0</td>
-      <td>BIBB</td>
-      <td>County, AL</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 50 columns</p>
-</div>
-
-
-
-
-```python
-df2 = pd.merge(df_withCollege, dfEducation[['State','County','Less than a high school diploma 2012_2016',
-       'High school diploma only 2012_2016',
-       'Some college or associates degree 2012_2016',
-       'Bachelors degree or higher 2012_2016',
-       'Percent of adults with less than a high school diploma 2012_2016',
-       'Percent of adults with a high school diploma only 2012_2016',
-       'Percent of adults completing some college or associates degree 2012_2016',
-       'Percent of adults with a bachelors degree or higher 2012_2016']], \
-               how = 'left', left_on =['County', 'State short'], right_on = ['County', 'State'])
-df2.head()
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>GEOID</th>
-      <th>year</th>
-      <th>name</th>
-      <th>parent_location</th>
-      <th>population</th>
-      <th>poverty_rate</th>
-      <th>pct_renter_occupied</th>
-      <th>median_gross_rent</th>
-      <th>median_household_income</th>
-      <th>median_property_value</th>
-      <th>...</th>
-      <th>students_total_enrollments</th>
-      <th>State</th>
-      <th>Less than a high school diploma 2012_2016</th>
-      <th>High school diploma only 2012_2016</th>
-      <th>Some college or associates degree 2012_2016</th>
-      <th>Bachelors degree or higher 2012_2016</th>
-      <th>Percent of adults with less than a high school diploma 2012_2016</th>
-      <th>Percent of adults with a high school diploma only 2012_2016</th>
-      <th>Percent of adults completing some college or associates degree 2012_2016</th>
-      <th>Percent of adults with a bachelors degree or higher 2012_2016</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1001</td>
-      <td>2000</td>
-      <td>Autauga County</td>
-      <td>Alabama</td>
-      <td>43671.0</td>
-      <td>10.92</td>
-      <td>19.21</td>
-      <td>537.0</td>
-      <td>42013.0</td>
-      <td>94800.0</td>
-      <td>...</td>
-      <td>NaN</td>
-      <td>AL</td>
-      <td>4528.0</td>
-      <td>12519.0</td>
-      <td>10451.0</td>
-      <td>8968.0</td>
-      <td>12.417</td>
-      <td>34.331</td>
-      <td>28.660</td>
-      <td>24.593</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1003</td>
-      <td>2000</td>
-      <td>Baldwin County</td>
-      <td>Alabama</td>
-      <td>140415.0</td>
-      <td>10.15</td>
-      <td>20.46</td>
-      <td>566.0</td>
-      <td>40250.0</td>
-      <td>122500.0</td>
-      <td>...</td>
-      <td>43644.0</td>
-      <td>AL</td>
-      <td>13956.0</td>
-      <td>40154.0</td>
-      <td>44486.0</td>
-      <td>41350.0</td>
-      <td>9.972</td>
-      <td>28.692</td>
-      <td>31.788</td>
-      <td>29.547</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1005</td>
-      <td>2000</td>
-      <td>Barbour County</td>
-      <td>Alabama</td>
-      <td>29038.0</td>
-      <td>26.80</td>
-      <td>26.87</td>
-      <td>333.0</td>
-      <td>25101.0</td>
-      <td>68600.0</td>
-      <td>...</td>
-      <td>NaN</td>
-      <td>AL</td>
-      <td>4824.0</td>
-      <td>6422.0</td>
-      <td>4775.0</td>
-      <td>2366.0</td>
-      <td>26.236</td>
-      <td>34.927</td>
-      <td>25.969</td>
-      <td>12.868</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1007</td>
-      <td>2000</td>
-      <td>Bibb County</td>
-      <td>Alabama</td>
-      <td>20826.0</td>
-      <td>20.61</td>
-      <td>19.81</td>
-      <td>348.0</td>
-      <td>31420.0</td>
-      <td>74600.0</td>
-      <td>...</td>
-      <td>NaN</td>
-      <td>AL</td>
-      <td>3040.0</td>
-      <td>6586.0</td>
-      <td>4234.0</td>
-      <td>1890.0</td>
-      <td>19.302</td>
-      <td>41.816</td>
-      <td>26.883</td>
-      <td>12.000</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>1011</td>
-      <td>2000</td>
-      <td>Bullock County</td>
-      <td>Alabama</td>
-      <td>11714.0</td>
-      <td>33.48</td>
-      <td>25.51</td>
-      <td>324.0</td>
-      <td>20605.0</td>
-      <td>56600.0</td>
-      <td>...</td>
-      <td>NaN</td>
-      <td>AL</td>
-      <td>2452.0</td>
-      <td>2504.0</td>
-      <td>1625.0</td>
-      <td>752.0</td>
-      <td>33.438</td>
-      <td>34.147</td>
-      <td>22.160</td>
-      <td>10.255</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 40 columns</p>
-</div>
-
-
 
 
 ```python
@@ -2090,124 +1760,112 @@ df3 = pd.merge(df2, dfUnemployment[['Unemployment_rate_2016', 'Med_HH_Income_Per
 
 
 ```python
-df3.size
-df3['Unemployment_rate_2016'].isnull().sum()
-df3.drop(['name', 'parent_location','type','State_x','State_y'], axis = 1, inplace = True)
-```
+plt.figure(figsize=(10,8))
+plt.plot(df3['students_total_enrollments']/df3['population'], df3['eviction_rate'],'.')
+plt.xlabel('% population of students / county population')
+plt.ylabel('Evictioin rate')
 
-
-    ---------------------------------------------------------------------------
-
-    ValueError                                Traceback (most recent call last)
-
-    <ipython-input-333-802106fdc76d> in <module>()
-          1 df3.size
-          2 df3['Unemployment_rate_2016'].isnull().sum()
-    ----> 3 df3.drop(['name', 'parent_location','type','State_x','State_y'], axis = 1, inplace = True)
-    
-
-    ~\Anaconda3\lib\site-packages\pandas\core\generic.py in drop(self, labels, axis, level, inplace, errors)
-       2159                 new_axis = axis.drop(labels, level=level, errors=errors)
-       2160             else:
-    -> 2161                 new_axis = axis.drop(labels, errors=errors)
-       2162             dropped = self.reindex(**{axis_name: new_axis})
-       2163             try:
-    
-
-    ~\Anaconda3\lib\site-packages\pandas\core\indexes\base.py in drop(self, labels, errors)
-       3622             if errors != 'ignore':
-       3623                 raise ValueError('labels %s not contained in axis' %
-    -> 3624                                  labels[mask])
-       3625             indexer = indexer[~mask]
-       3626         return self.delete(indexer)
-    
-
-    ValueError: labels ['name' 'parent_location' 'type' 'State_x' 'State_y'] not contained in axis
-
-
-
-```python
-df3.iloc[0]
 ```
 
 
 
 
-    GEOID                                                                          1001
-    year                                                                           2000
-    population                                                                    43671
-    poverty_rate                                                                  10.92
-    pct_renter_occupied                                                           19.21
-    median_gross_rent                                                               537
-    median_household_income                                                       42013
-    median_property_value                                                         94800
-    rent_burden                                                                    22.6
-    pct_white                                                                     79.74
-    pct_af_am                                                                     17.01
-    pct_hispanic                                                                    1.4
-    pct_am_ind                                                                     0.43
-    pct_asian                                                                      0.44
-    pct_nh_pi                                                                      0.03
-    pct_multiple                                                                   0.86
-    pct_other                                                                       0.1
-    renter_occupied_households                                                     3074
-    eviction_filings                                                                 61
-    evictions                                                                        40
-    eviction_rate                                                                   1.3
-    eviction_filing_rate                                                           1.98
-    imputed                                                                           0
-    subbed                                                                            0
-    State short                                                                      AL
-    County                                                                      AUTAUGA
-    number_of_colleges                                                              NaN
-    students_total_enrollments                                                      NaN
-    Less than a high school diploma 2012_2016                                      4528
-    High school diploma only 2012_2016                                            12519
-    Some college or associates degree 2012_2016                                   10451
-    Bachelors degree or higher 2012_2016                                           8968
-    Percent of adults with less than a high school diploma 2012_2016             12.417
-    Percent of adults with a high school diploma only 2012_2016                  34.331
-    Percent of adults completing some college or associates degree 2012_2016      28.66
-    Percent of adults with a bachelors degree or higher 2012_2016                24.593
-    Unemployment_rate_2016                                                          5.3
-    Med_HH_Income_Percent_of_State_Total_2016                                     117.7
-    Name: 0, dtype: object
+    Text(0,0.5,'Evictioin rate')
 
+
+
+
+![png](output_15_1.png)
 
 
 
 ```python
-#df3.plot(x='Unemployment_rate_2016', y = 'eviction_rate', style = 'o')
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5, sharey=True, figsize = (18,8))
+ax1.plot(df3['poverty_rate'],  df3['eviction_rate'],'.')
+ax1.set_xlabel('poverty_rate', fontsize=15)
+ax1.set_ylabel('Eviction Rate',fontsize=15)
+
+ax2.plot(df3['median_gross_rent'],  df3['eviction_rate'],'.')
+ax2.set_xlabel('median_gross_rent', fontsize=15)
+
+ax3.plot(df3['median_household_income'],  df3['eviction_rate'],'.')
+ax3.set_xlabel('median_household_income', fontsize=15)
+
+ax4.plot(df3['median_property_value'],  df3['eviction_rate'],'.')
+ax4.set_xlabel('median_property_value', fontsize=15)
+
+ax5.plot(df3['rent_burden'],  df3['eviction_rate'],'.')
+ax5.set_xlabel('rent_burden', fontsize=15)
 ```
 
 
+
+
+    Text(0.5,0,'rent_burden')
+
+
+
+
+![png](output_16_1.png)
+
+
+
 ```python
-f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5,1, sharex=True)
+f, (ax1, ax2, ax3, ax4) = plt.subplots(4,1, sharex=True,  sharey=True, figsize = (15,10))
+for ax in (ax1, ax2, ax3, ax4, ax5):
+    ax.set_ylabel('Eviction Rate')
+
+ax1.plot(df3['Percent of adults with less than a high school diploma 2012_2016'],  df3['eviction_rate'],'.')
+ax1.set_xlabel('Percent of adults with less than a high school diploma 2012_2016')
+
+ax2.plot(df3['Percent of adults with a high school diploma only 2012_2016'],  df3['eviction_rate'],'.')
+ax2.set_xlabel(' high school diploma only 2012_2016')
+
+ax3.plot(df3['Percent of adults completing some college or associates degree 2012_2016'],  df3['eviction_rate'],'.')
+ax3.set_xlabel('some college or associates degree 2012_2016')
+
+ax4.plot(df3['Percent of adults with a bachelors degree or higher 2012_2016'],  df3['eviction_rate'],'.')
+ax4.set_xlabel(' bachelors degree or higher 2012_2016')
+```
+
+
+
+
+    Text(0.5,0,' bachelors degree or higher 2012_2016')
+
+
+
+
+![png](output_17_1.png)
+
+
+
+```python
+#plt.style.use('seaborn-white')
+f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5,1, sharex = True, sharey = True, figsize=(10, 20))
+
 ax1.plot(df3['pct_white'],  df3['eviction_rate'],'.')
-ax1.set_title('pct_white')
+ax1.set_xlabel('% population of White',fontsize=18)
+
 
 ax2.plot(df3['pct_af_am'],  df3['eviction_rate'],'.')
-ax2.set_title('pct_af_am')
+ax2.set_xlabel('% population of African American',fontsize=18)
 
 ax3.plot(df3['pct_hispanic'],  df3['eviction_rate'],'.')
-ax3.set_title('pct_hispanic')
+ax3.set_xlabel('% population of Hispanic or Latino origin',fontsize=18)
 
 ax4.plot(df3['pct_am_ind'],  df3['eviction_rate'],'.')
-ax4.set_title('pct_am_ind')
+ax4.set_xlabel('% population of American Indian and Alaska Native',fontsize=18)
 
 ax5.plot(df3['pct_asian'],  df3['eviction_rate'],'.')
-ax5.set_title('pct_asian')
+ax5.set_xlabel('% population of Asian',fontsize=18)
+
+for ax in (ax1, ax2, ax3, ax4, ax5):
+    ax.set_ylabel('Eviction Rate',fontsize=18)
 ```
 
 
-
-
-    Text(0.5,1,'pct_asian')
-
-
-
-
-![png](output_41_1.png)
+![png](output_18_0.png)
 
 
 
@@ -2218,331 +1876,55 @@ plt.plot(df3['pct_renter_occupied'], df3['eviction_rate'],'.')
 
 
 
-    [<matplotlib.lines.Line2D at 0x22601aa5f98>]
+    [<matplotlib.lines.Line2D at 0x226368b2a90>]
 
 
 
 
-![png](output_42_1.png)
-
-
-
-```python
-f, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(1,5, sharey=True)
-ax1.plot(df3['poverty_rate'],  df3['eviction_rate'],'.')
-ax1.set_title('poverty_rate')
-
-ax2.plot(df3['median_gross_rent'],  df3['eviction_rate'],'.')
-ax2.set_title('median_gross_rent')
-
-ax3.plot(df3['median_household_income'],  df3['eviction_rate'],'.')
-ax3.set_title('median_household_income')
-
-ax4.plot(df3['median_property_value'],  df3['eviction_rate'],'.')
-ax4.set_title('median_property_value')
-
-ax5.plot(df3['rent_burden'],  df3['eviction_rate'],'.')
-ax5.set_title('rent_burden')
-```
-
-
-
-
-    Text(0.5,1,'rent_burden')
-
-
-
-
-![png](output_43_1.png)
-
-
-
-```python
-plt.plot(df3['students_total_enrollments']/df3['population'], df3['eviction_rate'],'.')
-```
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x226080c8470>]
-
-
-
-
-![png](output_44_1.png)
+![png](output_19_1.png)
 
 
 
 ```python
 plt.plot(df3['Unemployment_rate_2016'], df3['eviction_rate'],'.')
+plt.xlabel('Unemployment rate')
+plt.ylabel('Evictioin rate')
 ```
 
 
 
 
-    [<matplotlib.lines.Line2D at 0x22602fd0f98>]
+    Text(0,0.5,'Evictioin rate')
 
 
 
 
-![png](output_45_1.png)
+![png](output_20_1.png)
 
 
 
 ```python
 plt.plot(df3['Med_HH_Income_Percent_of_State_Total_2016'], df3['eviction_rate'],'.')
+plt.xlabel('Med_House_Income_Percent_of_State')
+plt.ylabel('Evictioin rate')
 ```
 
 
 
 
-    [<matplotlib.lines.Line2D at 0x22609d17a20>]
+    Text(0,0.5,'Evictioin rate')
 
 
 
 
-![png](output_46_1.png)
-
-
-
-```python
-plt.plot(df3['median_property_value'], df3['eviction_rate'],'.')
-```
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x22602f66cc0>]
-
-
-
-
-![png](output_47_1.png)
-
-
-
-```python
-plt.plot(df3['Unemployment_rate_2016'], df3['eviction_rate'],'.')
-```
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x226027b9ba8>]
-
-
-
-
-![png](output_48_1.png)
-
-
-
-```python
-f, (ax1, ax2, ax3, ax4) = plt.subplots(4,1, sharex=True)
-ax1.plot(df3['Percent of adults with less than a high school diploma 2012_2016'],  df3['eviction_rate'],'.')
-ax1.set_title('Percent of adults with less than a high school diploma 2012_2016')
-
-ax2.plot(df3['Percent of adults with a high school diploma only 2012_2016'],  df3['eviction_rate'],'.')
-ax2.set_title(' high school diploma only 2012_2016')
-
-ax3.plot(df3['Percent of adults completing some college or associates degree 2012_2016'],  df3['eviction_rate'],'.')
-ax3.set_title('some college or associates degree 2012_2016')
-
-ax4.plot(df3['Percent of adults with a bachelors degree or higher 2012_2016'],  df3['eviction_rate'],'.')
-ax4.set_title(' bachelors degree or higher 2012_2016')
-```
-
-
-
-
-    Text(0.5,1,' bachelors degree or higher 2012_2016')
-
-
-
-
-![png](output_49_1.png)
-
-
-
-```python
-plt.plot(df3['County'], df3['eviction_rate'], '.')
-```
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x226033a8da0>]
-
-
-
-
-![png](output_50_1.png)
-
-
-
-```python
-plt.plot(df3['students_total_enrollments'], df3['eviction_rate'], '.')
-plt.xlim([0,150000])
-```
-
-
-
-
-    (0, 150000)
-
-
-
-
-![png](output_51_1.png)
-
-
-
-```python
-plt.plot(df3['year'], df3['eviction_rate'], '.')
-```
-
-
-
-
-    [<matplotlib.lines.Line2D at 0x2260045aa58>]
-
-
-
-
-![png](output_52_1.png)
-
-
-
-```python
-dftest = pd.DataFrame({'A': ['a', 'b', 'a'], 'B': ['b', 'a', 'c'],
-                    'C': [1, 2, 3]})
-dftest
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>A</th>
-      <th>B</th>
-      <th>C</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>a</td>
-      <td>b</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>b</td>
-      <td>a</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>a</td>
-      <td>c</td>
-      <td>3</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-pd.get_dummies(dftest, prefix=['col1', 'col2'])
-```
-
-
-
-
-<div>
-<style>
-    .dataframe thead tr:only-child th {
-        text-align: right;
-    }
-
-    .dataframe thead th {
-        text-align: left;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>C</th>
-      <th>col1_a</th>
-      <th>col1_b</th>
-      <th>col2_a</th>
-      <th>col2_b</th>
-      <th>col2_c</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>0</td>
-      <td>1</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
+![png](output_21_1.png)
 
 
 
 ```python
 df4 = pd.get_dummies(df3)
 list(df4.columns)
-
+## df4.shape (56398, 1656)
 ```
 
 
@@ -3549,17 +2931,5 @@ list(df4.columns)
      'County_MCLEOD',
      'County_MCMINN',
      ...]
-
-
-
-
-```python
-df3.columns.size
-```
-
-
-
-
-    38
 
 
